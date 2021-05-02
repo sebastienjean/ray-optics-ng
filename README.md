@@ -11,11 +11,6 @@ Simulate reflection and refraction of light.
 - View images that can be observed from some given position
 - Distance and angular measurement
 
-## Links
-- [Project Page](https://ricktu288.github.io/ray-optics/)
-- [Chrome App](https://chrome.google.com/webstore/detail/ray-optics-simulation/egamlemiidmmmcccadndbjjihkcfiobh)
-- [Documentation](http://chengscott.tw/ray-optics/)
-
 ## Sample files
 - [Sample file folder](/samples)
 
@@ -23,12 +18,10 @@ Use `Open` to open the downloaded sample files to preview what cane be done usin
 
 If you created a good sample, please submit a pull request to let others see your work!
 
-# Quick Start
-
-Clone the repo: `git clone https://github.com/ricktu288/ray-optics.git`
-
 # License
-Copyright 2018 Rick Tu, Johnson
+Copyright 2016 Rick Tu
+Copyright 2018 Johnson
+Copyright 2021 Sebastien Jean, Dimitri Cutivel
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -65,3 +58,8 @@ The source code is available at: https://github.com/jquery/jquery
 
 Knockout is distributed under the [MIT license](https://opensource.org/licenses/mit-license.php).
 The source code is available at: https://github.com/knockout/knockout
+
+### Popper
+
+Popper is distributed under the [MIT license](https://github.com/popperjs/popper-core/blob/master/LICENSE.md).
+The source code is available at: https://github.com/popperjs
