@@ -1,214 +1,4 @@
-﻿var graphs = {
-
-    point: function (x, y) {
-        return {type: 1, x: x, y: y, exist: true}
-    },
-
-    line: function (p1, p2) {
-        return {type: 2, p1: p1, p2: p2, exist: true}
-    },
-
-    ray: function (p1, p2) {
-        return {type: 3, p1: p1, p2: p2, exist: true}
-    },
-
-    line_segment: function (p1, p2) {
-        return {type: 4, p1: p1, p2: p2, exist: true}
-    },
-
-    segment: function (p1, p2) {
-        return {type: 4, p1: p1, p2: p2, exist: true}
-    },
-
-    circle: function (c, r) {
-        if (typeof r == 'object' && r.type == 1) {
-            return {type: 5, c: c, r: this.line_segment(c, r), exist: true}
-        } else {
-            return {type: 5, c: c, r: r, exist: true}
-        }
-    },
-
-    /**
-     * inner product
-     * @method dot
-     * @param {graph.point} p1
-     * @param {graph.point} p2
-     * @return {Number}
-     **/
-    dot: function (p1, p2) {
-        return p1.x * p2.x + p1.y * p2.y;
-    },
-
-    /**
-     * outer product
-     * @method cross
-     * @param {graph.point} p1
-     * @param {graph.point} p2
-     * @return {Number}
-     **/
-    cross: function (p1, p2) {
-        return p1.x * p2.y - p1.y * p2.x;
-    },
-
-    /**
-     * @method intersection
-     * @param {graph} obj1
-     * @param {graph} obj2
-     * @return {graph.point}
-     **/
-    intersection: function (obj1, obj2) {
-        // line & line
-        if (obj1.type == 2 && obj2.type == 2) {
-            return this.intersection_2line(obj1, obj2);
-        }
-        // line & circle
-        else if (obj1.type == 2 && obj2.type == 5) {
-            return this.intersection_line_circle(obj1, obj2);
-        }
-        // circle & line
-        else if (obj1.type == 5 && obj2.type == 2) {
-            return this.intersection_line_circle(obj2, obj1);
-        }
-    },
-
-    /**
-     * @method intersection_2line
-     * @param {graph.line} l1
-     * @param {graph.line} l2
-     * @return {graph.point}
-     **/
-    intersection_2line: function (l1, l2) {
-        var A = l1.p2.x * l1.p1.y - l1.p1.x * l1.p2.y;
-        var B = l2.p2.x * l2.p1.y - l2.p1.x * l2.p2.y;
-        var xa = l1.p2.x - l1.p1.x;
-        var xb = l2.p2.x - l2.p1.x;
-        var ya = l1.p2.y - l1.p1.y;
-        var yb = l2.p2.y - l2.p1.y;
-        return graphs.point((A * xb - B * xa) / (xa * yb - xb * ya), (A * yb - B * ya) / (xa * yb - xb * ya));
-    },
-
-    /**
-     * @method intersection_2line
-     * @param {graph.line} l1
-     * @param {graph.circle} c2
-     * @return {graph.point}
-     **/
-    intersection_line_circle: function (l1, c1) {
-        var xa = l1.p2.x - l1.p1.x;
-        var ya = l1.p2.y - l1.p1.y;
-        var cx = c1.c.x;
-        var cy = c1.c.y;
-        var r_sq = (typeof c1.r == 'object') ? ((c1.r.p1.x - c1.r.p2.x) * (c1.r.p1.x - c1.r.p2.x) + (c1.r.p1.y - c1.r.p2.y) * (c1.r.p1.y - c1.r.p2.y)) : (c1.r * c1.r);
-
-        var l = Math.sqrt(xa * xa + ya * ya);
-        var ux = xa / l;
-        var uy = ya / l;
-
-        var cu = ((cx - l1.p1.x) * ux + (cy - l1.p1.y) * uy);
-        var px = l1.p1.x + cu * ux;
-        var py = l1.p1.y + cu * uy;
-
-
-        var d = Math.sqrt(r_sq - (px - cx) * (px - cx) - (py - cy) * (py - cy));
-
-        var ret = [];
-        ret[1] = graphs.point(px + ux * d, py + uy * d);
-        ret[2] = graphs.point(px - ux * d, py - uy * d);
-
-        return ret;
-    },
-
-    intersection_is_on_ray: function (p1, r1) {
-        return (p1.x - r1.p1.x) * (r1.p2.x - r1.p1.x) + (p1.y - r1.p1.y) * (r1.p2.y - r1.p1.y) >= 0;
-    },
-
-    intersection_is_on_segment: function (p1, s1) {
-        return (p1.x - s1.p1.x) * (s1.p2.x - s1.p1.x) + (p1.y - s1.p1.y) * (s1.p2.y - s1.p1.y) >= 0 && (p1.x - s1.p2.x) * (s1.p1.x - s1.p2.x) + (p1.y - s1.p2.y) * (s1.p1.y - s1.p2.y) >= 0;
-    },
-
-    /**
-     * @method length_segment
-     * @param {graph.segment} seg
-     * @return {Number}
-     **/
-    length_segment: function (seg) {
-        return Math.sqrt(this.length_segment_squared(seg));
-    },
-
-    /**
-     * @method length_segment_squared
-     * @param {graph.segment} seg
-     * @return {Number}
-     **/
-    length_segment_squared: function (seg) {
-        return this.length_squared(seg.p1, seg.p2);
-    },
-
-    /**
-     * @method length
-     * @param {graph.point} p1
-     * @param {graph.point} p2
-     * @return {Number}
-     **/
-    length: function (p1, p2) {
-        return Math.sqrt(this.length_squared(p1, p2));
-    },
-
-    /**
-     * @method length_squared
-     * @param {graph.point} p1
-     * @param {graph.point} p2
-     * @return {Number}
-     **/
-    length_squared: function (p1, p2) {
-        var dx = p1.x - p2.x;
-        var dy = p1.y - p2.y;
-        return dx * dx + dy * dy;
-    },
-
-    /**
-     * @method midpoint
-     * @param {graph.line} l1
-     * @return {graph.point}
-     **/
-    midpoint: function (l1) {
-        var nx = (l1.p1.x + l1.p2.x) * 0.5;
-        var ny = (l1.p1.y + l1.p2.y) * 0.5;
-        return graphs.point(nx, ny);
-    },
-
-    /**
-     * @method perpendicular_bisector
-     * @param {graph.line} l1
-     * @return {graph.line}
-     **/
-    perpendicular_bisector: function (l1) {
-        return graphs.line(
-            graphs.point(
-                (-l1.p1.y + l1.p2.y + l1.p1.x + l1.p2.x) * 0.5,
-                (l1.p1.x - l1.p2.x + l1.p1.y + l1.p2.y) * 0.5
-            ),
-            graphs.point(
-                (l1.p1.y - l1.p2.y + l1.p1.x + l1.p2.x) * 0.5,
-                (-l1.p1.x + l1.p2.x + l1.p1.y + l1.p2.y) * 0.5
-            )
-        );
-    },
-
-    /**
-     * @method parallel
-     * @param {graph.line} l1
-     * @param {graph.point} p1
-     * @return {graph.line}
-     **/
-    parallel: function (l1, p1) {
-        var dx = l1.p2.x - l1.p1.x;
-        var dy = l1.p2.y - l1.p1.y;
-        return graphs.line(p1, graphs.point(p1.x + dx, p1.y + dy));
-    }
-};
-
-var canvasPainter = {
+﻿var canvasPainter = {
     draw: function (graph, color) {
         // point
         if (graph.type == 1) {
@@ -288,7 +78,7 @@ objTypes['lineobj'] = {
             obj.p2 = mouse;
         }
 
-        obj.p1 = ctrl ? graphs.point(2 * constructionPoint.x - obj.p2.x, 2 * constructionPoint.y - obj.p2.y) : constructionPoint;
+        obj.p1 = ctrl ? Graph.point(2 * constructionPoint.x - obj.p2.x, 2 * constructionPoint.y - obj.p2.y) : constructionPoint;
 
         if (!mouseOnPoint_construct(mouse, obj.p1)) {
             draw();
@@ -309,14 +99,14 @@ objTypes['lineobj'] = {
     },
 
     clicked: function (obj, mouse_nogrid, mouse, draggingPart) {
-        if (mouseOnPoint(mouse_nogrid, obj.p1) && graphs.length_squared(mouse_nogrid, obj.p1) <= graphs.length_squared(mouse_nogrid, obj.p2)) {
+        if (mouseOnPoint(mouse_nogrid, obj.p1) && Graph.length_squared(mouse_nogrid, obj.p1) <= Graph.length_squared(mouse_nogrid, obj.p2)) {
             draggingPart.part = 1;
-            draggingPart.targetPoint = graphs.point(obj.p1.x, obj.p1.y);
+            draggingPart.targetPoint = Graph.point(obj.p1.x, obj.p1.y);
             return true;
         }
         if (mouseOnPoint(mouse_nogrid, obj.p2)) {
             draggingPart.part = 2;
-            draggingPart.targetPoint = graphs.point(obj.p2.x, obj.p2.y);
+            draggingPart.targetPoint = Graph.point(obj.p2.x, obj.p2.y);
             return true;
         }
         if (mouseOnSegment(mouse_nogrid, obj)) {
@@ -332,7 +122,7 @@ objTypes['lineobj'] = {
     dragging: function (obj, mouse, draggingPart, ctrl, shift) {
         var basePoint;
         if (draggingPart.part == 1) {
-            basePoint = ctrl ? graphs.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p2;
+            basePoint = ctrl ? Graph.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p2;
 
             obj.p1 = shift ? snapToDirection(mouse, basePoint, [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {
                 x: 1,
@@ -341,10 +131,10 @@ objTypes['lineobj'] = {
                 x: (draggingPart.originalObj.p2.x - draggingPart.originalObj.p1.x),
                 y: (draggingPart.originalObj.p2.y - draggingPart.originalObj.p1.y)
             }]) : mouse;
-            obj.p2 = ctrl ? graphs.point(2 * basePoint.x - obj.p1.x, 2 * basePoint.y - obj.p1.y) : basePoint;
+            obj.p2 = ctrl ? Graph.point(2 * basePoint.x - obj.p1.x, 2 * basePoint.y - obj.p1.y) : basePoint;
         }
         if (draggingPart.part == 2) {
-            basePoint = ctrl ? graphs.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p1;
+            basePoint = ctrl ? Graph.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p1;
 
             obj.p2 = shift ? snapToDirection(mouse, basePoint, [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {
                 x: 1,
@@ -353,7 +143,7 @@ objTypes['lineobj'] = {
                 x: (draggingPart.originalObj.p2.x - draggingPart.originalObj.p1.x),
                 y: (draggingPart.originalObj.p2.y - draggingPart.originalObj.p1.y)
             }]) : mouse;
-            obj.p1 = ctrl ? graphs.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
+            obj.p1 = ctrl ? Graph.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
         }
         if (draggingPart.part == 0) {
             if (shift) {
@@ -386,9 +176,9 @@ objTypes['lineobj'] = {
     },
 
     rayIntersection: function (obj, ray) {
-        var rp_temp = graphs.intersection_2line(graphs.line(ray.p1, ray.p2), graphs.line(obj.p1, obj.p2));
+        var rp_temp = Graph.intersection_2line(Graph.line(ray.p1, ray.p2), Graph.line(obj.p1, obj.p2));
 
-        if (graphs.intersection_is_on_segment(rp_temp, obj) && graphs.intersection_is_on_ray(rp_temp, ray)) {
+        if (Graph.intersection_is_on_segment(rp_temp, obj) && Graph.intersection_is_on_ray(rp_temp, ray)) {
             return rp_temp;
         }
     }
@@ -414,14 +204,14 @@ objTypes['halfplane'] = {
     move: objTypes['lineobj'].move,
 
     clicked: function (obj, mouse_nogrid, mouse, draggingPart) {
-        if (mouseOnPoint(mouse_nogrid, obj.p1) && graphs.length_squared(mouse_nogrid, obj.p1) <= graphs.length_squared(mouse_nogrid, obj.p2)) {
+        if (mouseOnPoint(mouse_nogrid, obj.p1) && Graph.length_squared(mouse_nogrid, obj.p1) <= Graph.length_squared(mouse_nogrid, obj.p2)) {
             draggingPart.part = 1;
-            draggingPart.targetPoint = graphs.point(obj.p1.x, obj.p1.y);
+            draggingPart.targetPoint = Graph.point(obj.p1.x, obj.p1.y);
             return true;
         }
         if (mouseOnPoint(mouse_nogrid, obj.p2)) {
             draggingPart.part = 2;
-            draggingPart.targetPoint = graphs.point(obj.p2.x, obj.p2.y);
+            draggingPart.targetPoint = Graph.point(obj.p2.x, obj.p2.y);
             return true;
         }
         if (mouseOnLine(mouse_nogrid, obj)) {
@@ -437,7 +227,7 @@ objTypes['halfplane'] = {
     dragging: function (obj, mouse, draggingPart, ctrl, shift) {
         var basePoint;
         if (draggingPart.part == 1) {
-            basePoint = ctrl ? graphs.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p2;
+            basePoint = ctrl ? Graph.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p2;
 
             obj.p1 = shift ? snapToDirection(mouse, basePoint, [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {
                 x: 1,
@@ -446,10 +236,10 @@ objTypes['halfplane'] = {
                 x: (draggingPart.originalObj.p2.x - draggingPart.originalObj.p1.x),
                 y: (draggingPart.originalObj.p2.y - draggingPart.originalObj.p1.y)
             }]) : mouse;
-            obj.p2 = ctrl ? graphs.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
+            obj.p2 = ctrl ? Graph.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
         }
         if (draggingPart.part == 2) {
-            basePoint = ctrl ? graphs.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p1;
+            basePoint = ctrl ? Graph.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p1;
 
             obj.p2 = shift ? snapToDirection(mouse, basePoint, [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {
                 x: 1,
@@ -458,7 +248,7 @@ objTypes['halfplane'] = {
                 x: (draggingPart.originalObj.p2.x - draggingPart.originalObj.p1.x),
                 y: (draggingPart.originalObj.p2.y - draggingPart.originalObj.p1.y)
             }]) : mouse;
-            obj.p1 = ctrl ? graphs.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
+            obj.p1 = ctrl ? Graph.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
         }
         if (draggingPart.part == 0) {
             if (shift) {
@@ -489,9 +279,9 @@ objTypes['halfplane'] = {
 
     rayIntersection: function (obj, ray) {
         if (obj.p <= 0) return;
-        var rp_temp = graphs.intersection_2line(graphs.line(ray.p1, ray.p2), graphs.line(obj.p1, obj.p2));
+        var rp_temp = Graph.intersection_2line(Graph.line(ray.p1, ray.p2), Graph.line(obj.p1, obj.p2));
 
-        if (graphs.intersection_is_on_ray(rp_temp, ray)) {
+        if (Graph.intersection_is_on_ray(rp_temp, ray)) {
             return rp_temp;
         }
     },
@@ -589,17 +379,17 @@ objTypes['circlelens'] = {
     move: objTypes['lineobj'].move,
 
     clicked: function (obj, mouse_nogrid, mouse, draggingPart) {
-        if (mouseOnPoint(mouse_nogrid, obj.p1) && graphs.length_squared(mouse_nogrid, obj.p1) <= graphs.length_squared(mouse_nogrid, obj.p2)) {
+        if (mouseOnPoint(mouse_nogrid, obj.p1) && Graph.length_squared(mouse_nogrid, obj.p1) <= Graph.length_squared(mouse_nogrid, obj.p2)) {
             draggingPart.part = 1;
-            draggingPart.targetPoint = graphs.point(obj.p1.x, obj.p1.y);
+            draggingPart.targetPoint = Graph.point(obj.p1.x, obj.p1.y);
             return true;
         }
         if (mouseOnPoint(mouse_nogrid, obj.p2)) {
             draggingPart.part = 2;
-            draggingPart.targetPoint = graphs.point(obj.p2.x, obj.p2.y);
+            draggingPart.targetPoint = Graph.point(obj.p2.x, obj.p2.y);
             return true;
         }
-        if (Math.abs(graphs.length(obj.p1, mouse_nogrid) - graphs.length_segment(obj)) < clickExtent_line) {
+        if (Math.abs(Graph.length(obj.p1, mouse_nogrid) - Graph.length_segment(obj)) < clickExtent_line) {
             draggingPart.part = 0;
             draggingPart.mouse0 = mouse;
             draggingPart.mouse1 = mouse;
@@ -615,13 +405,13 @@ objTypes['circlelens'] = {
 
     rayIntersection: function (obj, ray) {
         if (obj.p <= 0) return;
-        var rp_temp = graphs.intersection_line_circle(graphs.line(ray.p1, ray.p2), graphs.circle(obj.p1, obj.p2));
+        var rp_temp = Graph.intersection_line_circle(Graph.line(ray.p1, ray.p2), Graph.circle(obj.p1, obj.p2));
         var rp_exist = [];
         var rp_lensq = [];
         for (var i = 1; i <= 2; i++) {
 
-            rp_exist[i] = graphs.intersection_is_on_ray(rp_temp[i], ray) && graphs.length_squared(rp_temp[i], ray.p1) > minShotLength_squared;
-            rp_lensq[i] = graphs.length_squared(ray.p1, rp_temp[i]);
+            rp_exist[i] = Graph.intersection_is_on_ray(rp_temp[i], ray) && Graph.length_squared(rp_temp[i], ray.p1) > minShotLength_squared;
+            rp_lensq[i] = Graph.length_squared(ray.p1, rp_temp[i]);
         }
 
         if (rp_exist[1] && ((!rp_exist[2]) || rp_lensq[1] < rp_lensq[2])) {
@@ -635,7 +425,7 @@ objTypes['circlelens'] = {
     draw: function (obj, canvas, aboveLight) {
         if (!aboveLight) {
             ctx.beginPath();
-            ctx.arc(obj.p1.x, obj.p1.y, graphs.length_segment(obj), 0, Math.PI * 2, false);
+            ctx.arc(obj.p1.x, obj.p1.y, Graph.length_segment(obj), 0, Math.PI * 2, false);
             objTypes['refractor'].fillGlass(obj.p);
         }
         ctx.lineWidth = 1;
@@ -646,8 +436,8 @@ objTypes['circlelens'] = {
     },
 
     shot: function (obj, ray, rayIndex, rp, surfaceMerging_objs) {
-        var midpoint = graphs.midpoint(graphs.line_segment(ray.p1, rp));
-        var d = graphs.length_squared(obj.p1, obj.p2) - graphs.length_squared(obj.p1, midpoint);
+        var midpoint = Graph.midpoint(Graph.line_segment(ray.p1, rp));
+        var d = Graph.length_squared(obj.p1, obj.p2) - Graph.length_squared(obj.p1, midpoint);
         if (d > 0) {
             var n1 = obj.p;
             var normal = {x: obj.p1.x - rp.x, y: obj.p1.y - rp.y};
@@ -676,8 +466,8 @@ objTypes['circlelens'] = {
     },
 
     getShotType: function (obj, ray) {
-        var midpoint = graphs.midpoint(graphs.line_segment(ray.p1, this.rayIntersection(obj, ray)));
-        var d = graphs.length_squared(obj.p1, obj.p2) - graphs.length_squared(obj.p1, midpoint);
+        var midpoint = Graph.midpoint(Graph.line_segment(ray.p1, this.rayIntersection(obj, ray)));
+        var d = Graph.length_squared(obj.p1, obj.p2) - Graph.length_squared(obj.p1, midpoint);
 
         if (d > 0) {
             return 1;
@@ -768,12 +558,12 @@ objTypes['refractor'] = {
 
             for (var i = 0; i < obj.path.length - 1; i++) {
                 if (obj.path[(i + 1)].arc && !obj.path[i].arc && i < obj.path.length - 2) {
-                    p1 = graphs.point(obj.path[i].x, obj.path[i].y);
-                    p2 = graphs.point(obj.path[(i + 2)].x, obj.path[(i + 2)].y);
-                    p3 = graphs.point(obj.path[(i + 1)].x, obj.path[(i + 1)].y);
-                    center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(p1, p3)), graphs.perpendicular_bisector(graphs.line(p2, p3)));
+                    p1 = Graph.point(obj.path[i].x, obj.path[i].y);
+                    p2 = Graph.point(obj.path[(i + 2)].x, obj.path[(i + 2)].y);
+                    p3 = Graph.point(obj.path[(i + 1)].x, obj.path[(i + 1)].y);
+                    center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(p1, p3)), Graph.perpendicular_bisector(Graph.line(p2, p3)));
                     if (isFinite(center.x) && isFinite(center.y)) {
-                        r = graphs.length(center, p3);
+                        r = Graph.length(center, p3);
                         a1 = Math.atan2(p1.y - center.y, p1.x - center.x);
                         a2 = Math.atan2(p2.y - center.y, p2.x - center.x);
                         a3 = Math.atan2(p3.y - center.y, p3.x - center.x);
@@ -798,12 +588,12 @@ objTypes['refractor'] = {
 
             for (var i = 0; i < obj.path.length; i++) {
                 if (obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                    p1 = graphs.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
-                    p2 = graphs.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
-                    p3 = graphs.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
-                    center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(p1, p3)), graphs.perpendicular_bisector(graphs.line(p2, p3)));
+                    p1 = Graph.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
+                    p2 = Graph.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
+                    p3 = Graph.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
+                    center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(p1, p3)), Graph.perpendicular_bisector(Graph.line(p2, p3)));
                     if (isFinite(center.x) && isFinite(center.y)) {
-                        r = graphs.length(center, p3);
+                        r = Graph.length(center, p3);
                         a1 = Math.atan2(p1.y - center.y, p1.x - center.x);
                         a2 = Math.atan2(p2.y - center.y, p2.x - center.x);
                         a3 = Math.atan2(p3.y - center.y, p3.x - center.x);
@@ -870,7 +660,7 @@ objTypes['refractor'] = {
         var targetPoint_index = -1;
         for (var i = 0; i < obj.path.length; i++) {
             if (mouseOnPoint(mouse_nogrid, obj.path[i])) {
-                click_lensq_temp = graphs.length_squared(mouse_nogrid, obj.path[i]);
+                click_lensq_temp = Graph.length_squared(mouse_nogrid, obj.path[i]);
                 if (click_lensq_temp <= click_lensq) {
                     click_lensq = click_lensq_temp;
                     targetPoint_index = i;
@@ -880,23 +670,23 @@ objTypes['refractor'] = {
         if (targetPoint_index != -1) {
             draggingPart.part = 1;
             draggingPart.index = targetPoint_index;
-            draggingPart.targetPoint = graphs.point(obj.path[targetPoint_index].x, obj.path[targetPoint_index].y);
+            draggingPart.targetPoint = Graph.point(obj.path[targetPoint_index].x, obj.path[targetPoint_index].y);
             return true;
         }
 
         for (var i = 0; i < obj.path.length; i++) {
             if (obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                p1 = graphs.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
-                p2 = graphs.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
-                p3 = graphs.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
-                center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(p1, p3)), graphs.perpendicular_bisector(graphs.line(p2, p3)));
+                p1 = Graph.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
+                p2 = Graph.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
+                p3 = Graph.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
+                center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(p1, p3)), Graph.perpendicular_bisector(Graph.line(p2, p3)));
                 if (isFinite(center.x) && isFinite(center.y)) {
-                    r = graphs.length(center, p3);
+                    r = Graph.length(center, p3);
                     a1 = Math.atan2(p1.y - center.y, p1.x - center.x);
                     a2 = Math.atan2(p2.y - center.y, p2.x - center.x);
                     a3 = Math.atan2(p3.y - center.y, p3.x - center.x);
                     var a_m = Math.atan2(mouse_nogrid.y - center.y, mouse_nogrid.x - center.x);
-                    if (Math.abs(graphs.length(center, mouse_nogrid) - r) < clickExtent_line && (((a2 < a3 && a3 < a1) || (a1 < a2 && a2 < a3) || (a3 < a1 && a1 < a2)) == ((a2 < a_m && a_m < a1) || (a1 < a2 && a2 < a_m) || (a_m < a1 && a1 < a2)))) {
+                    if (Math.abs(Graph.length(center, mouse_nogrid) - r) < clickExtent_line && (((a2 < a3 && a3 < a1) || (a1 < a2 && a2 < a3) || (a3 < a1 && a1 < a2)) == ((a2 < a_m && a_m < a1) || (a1 < a2 && a2 < a_m) || (a_m < a1 && a1 < a2)))) {
                         draggingPart.part = 0;
                         draggingPart.mouse0 = mouse;
                         draggingPart.mouse1 = mouse;
@@ -904,7 +694,7 @@ objTypes['refractor'] = {
                         return true;
                     }
                 } else {
-                    if (mouseOnSegment(mouse_nogrid, graphs.segment(obj.path[(i) % obj.path.length], obj.path[(i + 2) % obj.path.length]))) {
+                    if (mouseOnSegment(mouse_nogrid, Graph.segment(obj.path[(i) % obj.path.length], obj.path[(i + 2) % obj.path.length]))) {
                         draggingPart.part = 0;
                         draggingPart.mouse0 = mouse;
                         draggingPart.mouse1 = mouse;
@@ -913,7 +703,7 @@ objTypes['refractor'] = {
                     }
                 }
             } else if (!obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                if (mouseOnSegment(mouse_nogrid, graphs.segment(obj.path[(i) % obj.path.length], obj.path[(i + 1) % obj.path.length]))) {
+                if (mouseOnSegment(mouse_nogrid, Graph.segment(obj.path[(i) % obj.path.length], obj.path[(i + 1) % obj.path.length]))) {
                     draggingPart.part = 0;
                     draggingPart.mouse0 = mouse;
                     draggingPart.mouse1 = mouse;
@@ -962,16 +752,16 @@ objTypes['refractor'] = {
         for (var i = 0; i < obj.path.length; i++) {
             s_point_temp = null;
             if (obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                p1 = graphs.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
-                p2 = graphs.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
-                p3 = graphs.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
-                center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(p1, p3)), graphs.perpendicular_bisector(graphs.line(p2, p3)));
+                p1 = Graph.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
+                p2 = Graph.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
+                p3 = Graph.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
+                center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(p1, p3)), Graph.perpendicular_bisector(Graph.line(p2, p3)));
                 if (isFinite(center.x) && isFinite(center.y)) {
-                    r = graphs.length(center, p3);
-                    rp_temp = graphs.intersection_line_circle(graphs.line(ray.p1, ray.p2), graphs.circle(center, p2));
+                    r = Graph.length(center, p3);
+                    rp_temp = Graph.intersection_line_circle(Graph.line(ray.p1, ray.p2), Graph.circle(center, p2));
                     for (var ii = 1; ii <= 2; ii++) {
-                        rp_exist[ii] = !graphs.intersection_is_on_segment(graphs.intersection_2line(graphs.line(p1, p2), graphs.line(p3, rp_temp[ii])), graphs.segment(p3, rp_temp[ii])) && graphs.intersection_is_on_ray(rp_temp[ii], ray) && graphs.length_squared(rp_temp[ii], ray.p1) > minShotLength_squared;
-                        rp_lensq[ii] = graphs.length_squared(ray.p1, rp_temp[ii]);
+                        rp_exist[ii] = !Graph.intersection_is_on_segment(Graph.intersection_2line(Graph.line(p1, p2), Graph.line(p3, rp_temp[ii])), Graph.segment(p3, rp_temp[ii])) && Graph.intersection_is_on_ray(rp_temp[ii], ray) && Graph.length_squared(rp_temp[ii], ray.p1) > minShotLength_squared;
+                        rp_lensq[ii] = Graph.length_squared(ray.p1, rp_temp[ii]);
                     }
                     if (rp_exist[1] && ((!rp_exist[2]) || rp_lensq[1] < rp_lensq[2]) && rp_lensq[1] > minShotLength_squared) {
                         s_point_temp = rp_temp[1];
@@ -982,18 +772,18 @@ objTypes['refractor'] = {
                         s_lensq_temp = rp_lensq[2];
                     }
                 } else {
-                    var rp_temp = graphs.intersection_2line(graphs.line(ray.p1, ray.p2), graphs.line(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length]));
+                    var rp_temp = Graph.intersection_2line(Graph.line(ray.p1, ray.p2), Graph.line(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length]));
 
-                    if (graphs.intersection_is_on_segment(rp_temp, graphs.segment(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length])) && graphs.intersection_is_on_ray(rp_temp, ray) && graphs.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
-                        s_lensq_temp = graphs.length_squared(ray.p1, rp_temp);
+                    if (Graph.intersection_is_on_segment(rp_temp, Graph.segment(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length])) && Graph.intersection_is_on_ray(rp_temp, ray) && Graph.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
+                        s_lensq_temp = Graph.length_squared(ray.p1, rp_temp);
                         s_point_temp = rp_temp;
                     }
                 }
             } else if (!obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                var rp_temp = graphs.intersection_2line(graphs.line(ray.p1, ray.p2), graphs.line(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length]));
+                var rp_temp = Graph.intersection_2line(Graph.line(ray.p1, ray.p2), Graph.line(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length]));
 
-                if (graphs.intersection_is_on_segment(rp_temp, graphs.segment(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length])) && graphs.intersection_is_on_ray(rp_temp, ray) && graphs.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
-                    s_lensq_temp = graphs.length_squared(ray.p1, rp_temp);
+                if (Graph.intersection_is_on_segment(rp_temp, Graph.segment(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length])) && Graph.intersection_is_on_ray(rp_temp, ray) && Graph.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
+                    s_lensq_temp = Graph.length_squared(ray.p1, rp_temp);
                     s_point_temp = rp_temp;
                 }
             }
@@ -1070,26 +860,26 @@ objTypes['refractor'] = {
         var nearEdge_temp = false;
         var p1, p2, p3;
         var center;
-        var ray2 = graphs.ray(ray.p1, graphs.point(ray.p2.x + Math.random() * 1e-5, ray.p2.y + Math.random() * 1e-5));
+        var ray2 = Graph.ray(ray.p1, Graph.point(ray.p2.x + Math.random() * 1e-5, ray.p2.y + Math.random() * 1e-5));
         var ray_intersect_count = 0;
 
         for (var i = 0; i < obj.path.length; i++) {
             s_point_temp = null;
             nearEdge_temp = false;
             if (obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                p1 = graphs.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
-                p2 = graphs.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
-                p3 = graphs.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
-                center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(p1, p3)), graphs.perpendicular_bisector(graphs.line(p2, p3)));
+                p1 = Graph.point(obj.path[i % obj.path.length].x, obj.path[i % obj.path.length].y);
+                p2 = Graph.point(obj.path[(i + 2) % obj.path.length].x, obj.path[(i + 2) % obj.path.length].y);
+                p3 = Graph.point(obj.path[(i + 1) % obj.path.length].x, obj.path[(i + 1) % obj.path.length].y);
+                center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(p1, p3)), Graph.perpendicular_bisector(Graph.line(p2, p3)));
                 if (isFinite(center.x) && isFinite(center.y)) {
-                    rp_temp = graphs.intersection_line_circle(graphs.line(ray.p1, ray.p2), graphs.circle(center, p2));
-                    rp2_temp = graphs.intersection_line_circle(graphs.line(ray2.p1, ray2.p2), graphs.circle(center, p2));
+                    rp_temp = Graph.intersection_line_circle(Graph.line(ray.p1, ray.p2), Graph.circle(center, p2));
+                    rp2_temp = Graph.intersection_line_circle(Graph.line(ray2.p1, ray2.p2), Graph.circle(center, p2));
                     for (var ii = 1; ii <= 2; ii++) {
-                        rp_on_ray[ii] = graphs.intersection_is_on_ray(rp_temp[ii], ray);
-                        rp_exist[ii] = rp_on_ray[ii] && !graphs.intersection_is_on_segment(graphs.intersection_2line(graphs.line(p1, p2), graphs.line(p3, rp_temp[ii])), graphs.segment(p3, rp_temp[ii])) && graphs.length_squared(rp_temp[ii], ray.p1) > minShotLength_squared;
-                        rp_lensq[ii] = graphs.length_squared(ray.p1, rp_temp[ii]);
-                        rp2_exist[ii] = !graphs.intersection_is_on_segment(graphs.intersection_2line(graphs.line(p1, p2), graphs.line(p3, rp2_temp[ii])), graphs.segment(p3, rp2_temp[ii])) && graphs.intersection_is_on_ray(rp2_temp[ii], ray2) && graphs.length_squared(rp2_temp[ii], ray2.p1) > minShotLength_squared;
-                        rp2_lensq[ii] = graphs.length_squared(ray2.p1, rp2_temp[ii]);
+                        rp_on_ray[ii] = Graph.intersection_is_on_ray(rp_temp[ii], ray);
+                        rp_exist[ii] = rp_on_ray[ii] && !Graph.intersection_is_on_segment(Graph.intersection_2line(Graph.line(p1, p2), Graph.line(p3, rp_temp[ii])), Graph.segment(p3, rp_temp[ii])) && Graph.length_squared(rp_temp[ii], ray.p1) > minShotLength_squared;
+                        rp_lensq[ii] = Graph.length_squared(ray.p1, rp_temp[ii]);
+                        rp2_exist[ii] = !Graph.intersection_is_on_segment(Graph.intersection_2line(Graph.line(p1, p2), Graph.line(p3, rp2_temp[ii])), Graph.segment(p3, rp2_temp[ii])) && Graph.intersection_is_on_ray(rp2_temp[ii], ray2) && Graph.length_squared(rp2_temp[ii], ray2.p1) > minShotLength_squared;
+                        rp2_lensq[ii] = Graph.length_squared(ray2.p1, rp2_temp[ii]);
                     }
                     if (rp_exist[1] && ((!rp_exist[2]) || rp_lensq[1] < rp_lensq[2]) && rp_lensq[1] > minShotLength_squared) {
                         s_point_temp = rp_temp[1];
@@ -1119,14 +909,14 @@ objTypes['refractor'] = {
                     if (rp2_exist[2] && rp2_lensq[2] > minShotLength_squared) {
                         ray_intersect_count++;
                     }
-                    if (s_point_temp && (graphs.length_squared(s_point_temp, p1) < minShotLength_squared || graphs.length_squared(s_point_temp, p2) < minShotLength_squared)) {
+                    if (s_point_temp && (Graph.length_squared(s_point_temp, p1) < minShotLength_squared || Graph.length_squared(s_point_temp, p2) < minShotLength_squared)) {
                         nearEdge_temp = true;
                     }
                 } else {
-                    rp_temp = graphs.intersection_2line(graphs.line(ray.p1, ray.p2), graphs.line(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length]));
-                    rp2_temp = graphs.intersection_2line(graphs.line(ray2.p1, ray2.p2), graphs.line(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length]));
-                    if (graphs.intersection_is_on_segment(rp_temp, graphs.segment(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length])) && graphs.intersection_is_on_ray(rp_temp, ray) && graphs.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
-                        s_lensq_temp = graphs.length_squared(ray.p1, rp_temp);
+                    rp_temp = Graph.intersection_2line(Graph.line(ray.p1, ray.p2), Graph.line(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length]));
+                    rp2_temp = Graph.intersection_2line(Graph.line(ray2.p1, ray2.p2), Graph.line(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length]));
+                    if (Graph.intersection_is_on_segment(rp_temp, Graph.segment(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length])) && Graph.intersection_is_on_ray(rp_temp, ray) && Graph.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
+                        s_lensq_temp = Graph.length_squared(ray.p1, rp_temp);
                         s_point_temp = rp_temp;
 
                         rdots = (ray.p2.x - ray.p1.x) * (obj.path[(i + 2) % obj.path.length].x - obj.path[i % obj.path.length].x) + (ray.p2.y - ray.p1.y) * (obj.path[(i + 2) % obj.path.length].y - obj.path[i % obj.path.length].y);
@@ -1136,19 +926,19 @@ objTypes['refractor'] = {
                         normal_y_temp = rdots * (obj.path[(i + 2) % obj.path.length].y - obj.path[i % obj.path.length].y) - ssq * (ray.p2.y - ray.p1.y);
                     }
 
-                    if (graphs.intersection_is_on_segment(rp2_temp, graphs.segment(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length])) && graphs.intersection_is_on_ray(rp2_temp, ray2) && graphs.length_squared(ray2.p1, rp2_temp) > minShotLength_squared) {
+                    if (Graph.intersection_is_on_segment(rp2_temp, Graph.segment(obj.path[i % obj.path.length], obj.path[(i + 2) % obj.path.length])) && Graph.intersection_is_on_ray(rp2_temp, ray2) && Graph.length_squared(ray2.p1, rp2_temp) > minShotLength_squared) {
                         ray_intersect_count++;
                     }
 
-                    if (s_point_temp && (graphs.length_squared(s_point_temp, obj.path[i % obj.path.length]) < minShotLength_squared || graphs.length_squared(s_point_temp, obj.path[(i + 2) % obj.path.length]) < minShotLength_squared)) {
+                    if (s_point_temp && (Graph.length_squared(s_point_temp, obj.path[i % obj.path.length]) < minShotLength_squared || Graph.length_squared(s_point_temp, obj.path[(i + 2) % obj.path.length]) < minShotLength_squared)) {
                         nearEdge_temp = true;
                     }
                 }
             } else if (!obj.path[(i + 1) % obj.path.length].arc && !obj.path[i % obj.path.length].arc) {
-                rp_temp = graphs.intersection_2line(graphs.line(ray.p1, ray.p2), graphs.line(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length]));
-                rp2_temp = graphs.intersection_2line(graphs.line(ray2.p1, ray2.p2), graphs.line(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length]));
-                if (graphs.intersection_is_on_segment(rp_temp, graphs.segment(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length])) && graphs.intersection_is_on_ray(rp_temp, ray) && graphs.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
-                    s_lensq_temp = graphs.length_squared(ray.p1, rp_temp);
+                rp_temp = Graph.intersection_2line(Graph.line(ray.p1, ray.p2), Graph.line(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length]));
+                rp2_temp = Graph.intersection_2line(Graph.line(ray2.p1, ray2.p2), Graph.line(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length]));
+                if (Graph.intersection_is_on_segment(rp_temp, Graph.segment(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length])) && Graph.intersection_is_on_ray(rp_temp, ray) && Graph.length_squared(ray.p1, rp_temp) > minShotLength_squared) {
+                    s_lensq_temp = Graph.length_squared(ray.p1, rp_temp);
                     s_point_temp = rp_temp;
 
                     rdots = (ray.p2.x - ray.p1.x) * (obj.path[(i + 1) % obj.path.length].x - obj.path[i % obj.path.length].x) + (ray.p2.y - ray.p1.y) * (obj.path[(i + 1) % obj.path.length].y - obj.path[i % obj.path.length].y);
@@ -1157,15 +947,15 @@ objTypes['refractor'] = {
                     normal_x_temp = rdots * (obj.path[(i + 1) % obj.path.length].x - obj.path[i % obj.path.length].x) - ssq * (ray.p2.x - ray.p1.x);
                     normal_y_temp = rdots * (obj.path[(i + 1) % obj.path.length].y - obj.path[i % obj.path.length].y) - ssq * (ray.p2.y - ray.p1.y);
                 }
-                if (graphs.intersection_is_on_segment(rp2_temp, graphs.segment(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length])) && graphs.intersection_is_on_ray(rp2_temp, ray2) && graphs.length_squared(ray2.p1, rp2_temp) > minShotLength_squared) {
+                if (Graph.intersection_is_on_segment(rp2_temp, Graph.segment(obj.path[i % obj.path.length], obj.path[(i + 1) % obj.path.length])) && Graph.intersection_is_on_ray(rp2_temp, ray2) && Graph.length_squared(ray2.p1, rp2_temp) > minShotLength_squared) {
                     ray_intersect_count++;
                 }
-                if (s_point_temp && (graphs.length_squared(s_point_temp, obj.path[i % obj.path.length]) < minShotLength_squared || graphs.length_squared(s_point_temp, obj.path[(i + 1) % obj.path.length]) < minShotLength_squared)) {
+                if (s_point_temp && (Graph.length_squared(s_point_temp, obj.path[i % obj.path.length]) < minShotLength_squared || Graph.length_squared(s_point_temp, obj.path[(i + 1) % obj.path.length]) < minShotLength_squared)) {
                     nearEdge_temp = true;
                 }
             }
             if (s_point_temp) {
-                if (s_point && graphs.length_squared(s_point_temp, s_point) < minShotLength_squared) {
+                if (s_point && Graph.length_squared(s_point_temp, s_point) < minShotLength_squared) {
                     surfaceMultiplicity++;
                 } else if (s_lensq_temp < s_lensq) {
                     s_lensq = s_lensq_temp;
@@ -1208,7 +998,7 @@ objTypes['refractor'] = {
 
         if (sq1 < 0) {
             ray.p1 = s_point;
-            ray.p2 = graphs.point(s_point.x + ray_x + 2 * cos1 * normal_x, s_point.y + ray_y + 2 * cos1 * normal_y);
+            ray.p2 = Graph.point(s_point.x + ray_x + 2 * cos1 * normal_x, s_point.y + ray_y + 2 * cos1 * normal_y);
         } else {
             var cos2 = Math.sqrt(sq1);
 
@@ -1217,7 +1007,7 @@ objTypes['refractor'] = {
             var R = 0.5 * (R_s + R_p);
             //http://en.wikipedia.org/wiki/Fresnel_equations#Definitions_and_power_equations
 
-            var ray2 = graphs.ray(s_point, graphs.point(s_point.x + ray_x + 2 * cos1 * normal_x, s_point.y + ray_y + 2 * cos1 * normal_y));
+            var ray2 = Graph.ray(s_point, Graph.point(s_point.x + ray_x + 2 * cos1 * normal_x, s_point.y + ray_y + 2 * cos1 * normal_y));
             ray2.brightness = ray.brightness * R;
             ray2.gap = ray.gap;
             if (ray2.brightness > 0.01) {
@@ -1231,7 +1021,7 @@ objTypes['refractor'] = {
             }
 
             ray.p1 = s_point;
-            ray.p2 = graphs.point(s_point.x + n1 * ray_x + (n1 * cos1 - cos2) * normal_x, s_point.y + n1 * ray_y + (n1 * cos1 - cos2) * normal_y);
+            ray.p2 = Graph.point(s_point.x + n1 * ray_x + (n1 * cos1 - cos2) * normal_x, s_point.y + n1 * ray_y + (n1 * cos1 - cos2) * normal_y);
             ray.brightness = ray.brightness * (1 - R);
         }
     }
@@ -1259,7 +1049,7 @@ objTypes['laser'] = {
     },
 
     shoot: function (obj) {
-        var ray1 = graphs.ray(obj.p1, obj.p2);
+        var ray1 = Graph.ray(obj.p1, obj.p2);
         ray1.brightness = 1;
         ray1.gap = true;
         ray1.isNew = true;
@@ -1297,7 +1087,7 @@ objTypes['mirror'] = {
         var mx = mirror.p2.x - mirror.p1.x;
         var my = mirror.p2.y - mirror.p1.y;
         ray.p1 = rp;
-        ray.p2 = graphs.point(rp.x + rx * (my * my - mx * mx) - 2 * ry * mx * my, rp.y + ry * (mx * mx - my * my) - 2 * rx * mx * my);
+        ray.p2 = Graph.point(rp.x + rx * (my * my - mx * mx) - 2 * ry * mx * my, rp.y + ry * (mx * mx - my * my) - 2 * rx * mx * my);
     }
 };
 
@@ -1343,7 +1133,7 @@ objTypes['lens'] = {
         ctx.globalAlpha = 1;
         ctx.fillStyle = 'rgb(255,0,0)';
 
-        var center = graphs.midpoint(obj);
+        var center = Graph.midpoint(obj);
         ctx.strokeStyle = 'rgb(255,255,255)';
         ctx.beginPath();
         ctx.moveTo(center.x - per_x * center_size, center.y - per_y * center_size);
@@ -1379,25 +1169,25 @@ objTypes['lens'] = {
     },
 
     shot: function (lens, ray, rayIndex, shootPoint) {
-        var lens_length = graphs.length_segment(lens);
+        var lens_length = Graph.length_segment(lens);
         var main_line_unitvector_x = (-lens.p1.y + lens.p2.y) / lens_length;
         var main_line_unitvector_y = (lens.p1.x - lens.p2.x) / lens_length;
-        var mid_point = graphs.midpoint(lens);
-        var twoF_point_1 = graphs.point(mid_point.x + main_line_unitvector_x * 2 * lens.p, mid_point.y + main_line_unitvector_y * 2 * lens.p);
-        var twoF_point_2 = graphs.point(mid_point.x - main_line_unitvector_x * 2 * lens.p, mid_point.y - main_line_unitvector_y * 2 * lens.p);
+        var mid_point = Graph.midpoint(lens);
+        var twoF_point_1 = Graph.point(mid_point.x + main_line_unitvector_x * 2 * lens.p, mid_point.y + main_line_unitvector_y * 2 * lens.p);
+        var twoF_point_2 = Graph.point(mid_point.x - main_line_unitvector_x * 2 * lens.p, mid_point.y - main_line_unitvector_y * 2 * lens.p);
         var twoF_line_near, twoF_line_far;
-        if (graphs.length_squared(ray.p1, twoF_point_1) < graphs.length_squared(ray.p1, twoF_point_2)) {
-            twoF_line_near = graphs.parallel(lens, twoF_point_1);
-            twoF_line_far = graphs.parallel(lens, twoF_point_2);
+        if (Graph.length_squared(ray.p1, twoF_point_1) < Graph.length_squared(ray.p1, twoF_point_2)) {
+            twoF_line_near = Graph.parallel(lens, twoF_point_1);
+            twoF_line_far = Graph.parallel(lens, twoF_point_2);
         } else {
-            twoF_line_near = graphs.parallel(lens, twoF_point_2);
-            twoF_line_far = graphs.parallel(lens, twoF_point_1);
+            twoF_line_near = Graph.parallel(lens, twoF_point_2);
+            twoF_line_far = Graph.parallel(lens, twoF_point_1);
         }
         if (lens.p > 0) {
-            ray.p2 = graphs.intersection_2line(twoF_line_far, graphs.line(mid_point, graphs.intersection_2line(twoF_line_near, ray)));
+            ray.p2 = Graph.intersection_2line(twoF_line_far, Graph.line(mid_point, Graph.intersection_2line(twoF_line_near, ray)));
             ray.p1 = shootPoint;
         } else {
-            ray.p2 = graphs.intersection_2line(twoF_line_far, graphs.line(shootPoint, graphs.intersection_2line(twoF_line_near, graphs.line(mid_point, graphs.intersection_2line(twoF_line_far, ray)))));
+            ray.p2 = Graph.intersection_2line(twoF_line_far, Graph.line(shootPoint, Graph.intersection_2line(twoF_line_near, Graph.line(mid_point, Graph.intersection_2line(twoF_line_far, ray)))));
             ray.p1 = shootPoint;
         }
     }
@@ -1412,7 +1202,7 @@ objTypes['idealmirror'] = {
     p_step: 1,
 
     create: function (mouse) {
-        return {type: 'idealmirror', p1: mouse, p2: graphs.point(mouse.x + gridSize, mouse.y), p: 100};
+        return {type: 'idealmirror', p1: mouse, p2: Graph.point(mouse.x + gridSize, mouse.y), p: 100};
     },
 
     //lineobj
@@ -1443,7 +1233,7 @@ objTypes['idealmirror'] = {
         ctx.stroke();
         ctx.lineWidth = 1;
 
-        var center = graphs.midpoint(obj);
+        var center = Graph.midpoint(obj);
         ctx.strokeStyle = 'rgb(255,255,255)';
         ctx.beginPath();
         ctx.moveTo(center.x - per_x * center_size, center.y - per_y * center_size);
@@ -1480,7 +1270,7 @@ objTypes['idealmirror'] = {
     },
 
     shot: function (obj, ray, rayIndex, shootPoint) {
-        objTypes['lens'].shot(obj, ray, rayIndex, graphs.point(shootPoint.x, shootPoint.y));
+        objTypes['lens'].shot(obj, ray, rayIndex, Graph.point(shootPoint.x, shootPoint.y));
 
         ray.p1.x = 2 * ray.p1.x - ray.p2.x;
         ray.p1.y = 2 * ray.p1.y - ray.p2.y;
@@ -1559,8 +1349,8 @@ objTypes['radiant'] = {
     clicked: function (obj, mouse_nogrid, mouse, draggingPart) {
         if (mouseOnPoint(mouse_nogrid, obj)) {
             draggingPart.part = 0;
-            draggingPart.mouse0 = graphs.point(obj.x, obj.y);
-            draggingPart.targetPoint = graphs.point(obj.x, obj.y);
+            draggingPart.mouse0 = Graph.point(obj.x, obj.y);
+            draggingPart.targetPoint = Graph.point(obj.x, obj.y);
             draggingPart.snapData = {};
             return true;
         }
@@ -1587,7 +1377,7 @@ objTypes['radiant'] = {
         var s = Math.PI * 2 / parseInt(getRayDensity() * 500);
         var i0 = (mode == 'observer') ? (-s * 2 + 1e-6) : 0;
         for (var i = i0; i < (Math.PI * 2 - 1e-5); i = i + s) {
-            var ray1 = graphs.ray(graphs.point(obj.x, obj.y), graphs.point(obj.x + Math.sin(i), obj.y + Math.cos(i)));
+            var ray1 = Graph.ray(Graph.point(obj.x, obj.y), Graph.point(obj.x + Math.sin(i), obj.y + Math.cos(i)));
             ray1.brightness = Math.min(obj.p / getRayDensity(), 1);
             ray1.isNew = true;
             if (i == i0) {
@@ -1639,14 +1429,14 @@ objTypes['parallel'] = {
     },
 
     shoot: function (obj) {
-        var n = graphs.length_segment(obj) * getRayDensity();
+        var n = Graph.length_segment(obj) * getRayDensity();
         var stepX = (obj.p2.x - obj.p1.x) / n;
         var stepY = (obj.p2.y - obj.p1.y) / n;
         var rayp2_x = obj.p1.x + obj.p2.y - obj.p1.y;
         var rayp2_y = obj.p1.y - obj.p2.x + obj.p1.x;
 
         for (var i = 0.5; i <= n; i++) {
-            var ray1 = graphs.ray(graphs.point(obj.p1.x + i * stepX, obj.p1.y + i * stepY), graphs.point(rayp2_x + i * stepX, rayp2_y + i * stepY));
+            var ray1 = Graph.ray(Graph.point(obj.p1.x + i * stepX, obj.p1.y + i * stepY), Graph.point(rayp2_x + i * stepX, rayp2_y + i * stepY));
             ray1.brightness = Math.min(obj.p / getRayDensity(), 1);
             ray1.isNew = true;
             if (i == 0) {
@@ -1689,7 +1479,7 @@ objTypes['arcmirror'] = {
                 obj.p2 = mouse;
             }
 
-            obj.p1 = ctrl ? graphs.point(2 * constructionPoint.x - obj.p2.x, 2 * constructionPoint.y - obj.p2.y) : constructionPoint;
+            obj.p1 = ctrl ? Graph.point(2 * constructionPoint.x - obj.p2.x, 2 * constructionPoint.y - obj.p2.y) : constructionPoint;
 
             draw();
             return;
@@ -1717,9 +1507,9 @@ objTypes['arcmirror'] = {
     draw: function (obj, canvas) {
         ctx.fillStyle = 'rgb(255,0,255)';
         if (obj.p3 && obj.p2) {
-            var center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(obj.p1, obj.p3)), graphs.perpendicular_bisector(graphs.line(obj.p2, obj.p3)));
+            var center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(obj.p1, obj.p3)), Graph.perpendicular_bisector(Graph.line(obj.p2, obj.p3)));
             if (isFinite(center.x) && isFinite(center.y)) {
-                var r = graphs.length(center, obj.p3);
+                var r = Graph.length(center, obj.p3);
                 var a1 = Math.atan2(obj.p1.y - center.y, obj.p1.x - center.x);
                 var a2 = Math.atan2(obj.p2.y - center.y, obj.p2.x - center.x);
                 var a3 = Math.atan2(obj.p3.y - center.y, obj.p3.x - center.x);
@@ -1765,30 +1555,30 @@ objTypes['arcmirror'] = {
     },
 
     clicked: function (obj, mouse_nogrid, mouse, draggingPart) {
-        if (mouseOnPoint(mouse_nogrid, obj.p1) && graphs.length_squared(mouse_nogrid, obj.p1) <= graphs.length_squared(mouse_nogrid, obj.p2) && graphs.length_squared(mouse_nogrid, obj.p1) <= graphs.length_squared(mouse_nogrid, obj.p3)) {
+        if (mouseOnPoint(mouse_nogrid, obj.p1) && Graph.length_squared(mouse_nogrid, obj.p1) <= Graph.length_squared(mouse_nogrid, obj.p2) && Graph.length_squared(mouse_nogrid, obj.p1) <= Graph.length_squared(mouse_nogrid, obj.p3)) {
             draggingPart.part = 1;
-            draggingPart.targetPoint = graphs.point(obj.p1.x, obj.p1.y);
+            draggingPart.targetPoint = Graph.point(obj.p1.x, obj.p1.y);
             return true;
         }
-        if (mouseOnPoint(mouse_nogrid, obj.p2) && graphs.length_squared(mouse_nogrid, obj.p2) <= graphs.length_squared(mouse_nogrid, obj.p3)) {
+        if (mouseOnPoint(mouse_nogrid, obj.p2) && Graph.length_squared(mouse_nogrid, obj.p2) <= Graph.length_squared(mouse_nogrid, obj.p3)) {
             draggingPart.part = 2;
-            draggingPart.targetPoint = graphs.point(obj.p2.x, obj.p2.y);
+            draggingPart.targetPoint = Graph.point(obj.p2.x, obj.p2.y);
             return true;
         }
         if (mouseOnPoint(mouse_nogrid, obj.p3)) {
             draggingPart.part = 3;
-            draggingPart.targetPoint = graphs.point(obj.p3.x, obj.p3.y);
+            draggingPart.targetPoint = Graph.point(obj.p3.x, obj.p3.y);
             return true;
         }
 
-        var center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(obj.p1, obj.p3)), graphs.perpendicular_bisector(graphs.line(obj.p2, obj.p3)));
+        var center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(obj.p1, obj.p3)), Graph.perpendicular_bisector(Graph.line(obj.p2, obj.p3)));
         if (isFinite(center.x) && isFinite(center.y)) {
-            var r = graphs.length(center, obj.p3);
+            var r = Graph.length(center, obj.p3);
             var a1 = Math.atan2(obj.p1.y - center.y, obj.p1.x - center.x);
             var a2 = Math.atan2(obj.p2.y - center.y, obj.p2.x - center.x);
             var a3 = Math.atan2(obj.p3.y - center.y, obj.p3.x - center.x);
             var a_m = Math.atan2(mouse_nogrid.y - center.y, mouse_nogrid.x - center.x);
-            if (Math.abs(graphs.length(center, mouse_nogrid) - r) < clickExtent_line && (((a2 < a3 && a3 < a1) || (a1 < a2 && a2 < a3) || (a3 < a1 && a1 < a2)) == ((a2 < a_m && a_m < a1) || (a1 < a2 && a2 < a_m) || (a_m < a1 && a1 < a2)))) {
+            if (Math.abs(Graph.length(center, mouse_nogrid) - r) < clickExtent_line && (((a2 < a3 && a3 < a1) || (a1 < a2 && a2 < a3) || (a3 < a1 && a1 < a2)) == ((a2 < a_m && a_m < a1) || (a1 < a2 && a2 < a_m) || (a_m < a1 && a1 < a2)))) {
                 draggingPart.part = 0;
                 draggingPart.mouse0 = mouse;
                 draggingPart.mouse1 = mouse;
@@ -1810,7 +1600,7 @@ objTypes['arcmirror'] = {
     dragging: function (obj, mouse, draggingPart, ctrl, shift) {
         var basePoint;
         if (draggingPart.part == 1) {
-            basePoint = ctrl ? graphs.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p2;
+            basePoint = ctrl ? Graph.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p2;
             obj.p1 = shift ? snapToDirection(mouse, basePoint, [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {
                 x: 1,
                 y: -1
@@ -1818,10 +1608,10 @@ objTypes['arcmirror'] = {
                 x: (draggingPart.originalObj.p2.x - draggingPart.originalObj.p1.x),
                 y: (draggingPart.originalObj.p2.y - draggingPart.originalObj.p1.y)
             }]) : mouse;
-            obj.p2 = ctrl ? graphs.point(2 * basePoint.x - obj.p1.x, 2 * basePoint.y - obj.p1.y) : basePoint;
+            obj.p2 = ctrl ? Graph.point(2 * basePoint.x - obj.p1.x, 2 * basePoint.y - obj.p1.y) : basePoint;
         }
         if (draggingPart.part == 2) {
-            basePoint = ctrl ? graphs.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p1;
+            basePoint = ctrl ? Graph.midpoint(draggingPart.originalObj) : draggingPart.originalObj.p1;
 
             obj.p2 = shift ? snapToDirection(mouse, basePoint, [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}, {
                 x: 1,
@@ -1830,7 +1620,7 @@ objTypes['arcmirror'] = {
                 x: (draggingPart.originalObj.p2.x - draggingPart.originalObj.p1.x),
                 y: (draggingPart.originalObj.p2.y - draggingPart.originalObj.p1.y)
             }]) : mouse;
-            obj.p1 = ctrl ? graphs.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
+            obj.p1 = ctrl ? Graph.point(2 * basePoint.x - obj.p2.x, 2 * basePoint.y - obj.p2.y) : basePoint;
         }
         if (draggingPart.part == 3) {
             obj.p3 = mouse;
@@ -1872,15 +1662,15 @@ objTypes['arcmirror'] = {
         if (!obj.p3) {
             return;
         }
-        var center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(obj.p1, obj.p3)), graphs.perpendicular_bisector(graphs.line(obj.p2, obj.p3)));
+        var center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(obj.p1, obj.p3)), Graph.perpendicular_bisector(Graph.line(obj.p2, obj.p3)));
         if (isFinite(center.x) && isFinite(center.y)) {
 
-            var rp_temp = graphs.intersection_line_circle(graphs.line(ray.p1, ray.p2), graphs.circle(center, obj.p2));
+            var rp_temp = Graph.intersection_line_circle(Graph.line(ray.p1, ray.p2), Graph.circle(center, obj.p2));
             var rp_exist = [];
             var rp_lensq = [];
             for (var i = 1; i <= 2; i++) {
-                rp_exist[i] = !graphs.intersection_is_on_segment(graphs.intersection_2line(graphs.line(obj.p1, obj.p2), graphs.line(obj.p3, rp_temp[i])), graphs.segment(obj.p3, rp_temp[i])) && graphs.intersection_is_on_ray(rp_temp[i], ray) && graphs.length_squared(rp_temp[i], ray.p1) > minShotLength_squared;
-                rp_lensq[i] = graphs.length_squared(ray.p1, rp_temp[i]);
+                rp_exist[i] = !Graph.intersection_is_on_segment(Graph.intersection_2line(Graph.line(obj.p1, obj.p2), Graph.line(obj.p3, rp_temp[i])), Graph.segment(obj.p3, rp_temp[i])) && Graph.intersection_is_on_ray(rp_temp[i], ray) && Graph.length_squared(rp_temp[i], ray.p1) > minShotLength_squared;
+                rp_lensq[i] = Graph.length_squared(ray.p1, rp_temp[i]);
             }
             if (rp_exist[1] && ((!rp_exist[2]) || rp_lensq[1] < rp_lensq[2])) {
                 return rp_temp[1];
@@ -1894,7 +1684,7 @@ objTypes['arcmirror'] = {
     },
 
     shot: function (obj, ray, rayIndex, rp) {
-        var center = graphs.intersection_2line(graphs.perpendicular_bisector(graphs.line(obj.p1, obj.p3)), graphs.perpendicular_bisector(graphs.line(obj.p2, obj.p3)));
+        var center = Graph.intersection_2line(Graph.perpendicular_bisector(Graph.line(obj.p1, obj.p3)), Graph.perpendicular_bisector(Graph.line(obj.p2, obj.p3)));
         if (isFinite(center.x) && isFinite(center.y)) {
             var rx = ray.p1.x - rp.x;
             var ry = ray.p1.y - rp.y;
@@ -1903,7 +1693,7 @@ objTypes['arcmirror'] = {
             var c_sq = cx * cx + cy * cy;
             var r_dot_c = rx * cx + ry * cy;
             ray.p1 = rp;
-            ray.p2 = graphs.point(rp.x - c_sq * rx + 2 * r_dot_c * cx, rp.y - c_sq * ry + 2 * r_dot_c * cy);
+            ray.p2 = Graph.point(rp.x - c_sq * rx + 2 * r_dot_c * cx, rp.y - c_sq * ry + 2 * r_dot_c * cy);
         } else {
             return objTypes['mirror'].shot(obj, ray, rayIndex, rp);
         }
@@ -2010,17 +1800,17 @@ objTypes['protractor'] = {
     move: objTypes['lineobj'].move,
 
     clicked: function (obj, mouse_nogrid, mouse, draggingPart) {
-        if (mouseOnPoint(mouse_nogrid, obj.p1) && graphs.length_squared(mouse_nogrid, obj.p1) <= graphs.length_squared(mouse_nogrid, obj.p2)) {
+        if (mouseOnPoint(mouse_nogrid, obj.p1) && Graph.length_squared(mouse_nogrid, obj.p1) <= Graph.length_squared(mouse_nogrid, obj.p2)) {
             draggingPart.part = 1;
-            draggingPart.targetPoint = graphs.point(obj.p1.x, obj.p1.y);
+            draggingPart.targetPoint = Graph.point(obj.p1.x, obj.p1.y);
             return true;
         }
         if (mouseOnPoint(mouse_nogrid, obj.p2)) {
             draggingPart.part = 2;
-            draggingPart.targetPoint = graphs.point(obj.p2.x, obj.p2.y);
+            draggingPart.targetPoint = Graph.point(obj.p2.x, obj.p2.y);
             return true;
         }
-        if (Math.abs(graphs.length(obj.p1, mouse_nogrid) - graphs.length_segment(obj)) < clickExtent_line) {
+        if (Math.abs(Graph.length(obj.p1, mouse_nogrid) - Graph.length_segment(obj)) < clickExtent_line) {
             draggingPart.part = 0;
             draggingPart.mouse0 = mouse;
             draggingPart.mouse1 = mouse;
@@ -2156,7 +1946,7 @@ window.onload = function (e) {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     ctx = canvas.getContext('2d');
-    mouse = graphs.point(0, 0);
+    mouse = Graph.point(0, 0);
 
     if (typeof (Storage) !== "undefined" && localStorage.rayOpticsData) {
         document.getElementById('textarea1').value = localStorage.rayOpticsData;
@@ -2658,8 +2448,8 @@ function shootWaitingRays() {
                     if (objTypes[objs[i].type].rayIntersection) {
                         s_point_temp = objTypes[objs[i].type].rayIntersection(objs[i], waitingRays[j]);
                         if (s_point_temp) {
-                            s_lensq_temp = graphs.length_squared(waitingRays[j].p1, s_point_temp);
-                            if (s_point && graphs.length_squared(s_point_temp, s_point) < minShotLength_squared && (objTypes[objs[i].type].supportSurfaceMerging || objTypes[s_obj.type].supportSurfaceMerging)) {
+                            s_lensq_temp = Graph.length_squared(waitingRays[j].p1, s_point_temp);
+                            if (s_point && Graph.length_squared(s_point_temp, s_point) < minShotLength_squared && (objTypes[objs[i].type].supportSurfaceMerging || objTypes[s_obj.type].supportSurfaceMerging)) {
                                 if (objTypes[s_obj.type].supportSurfaceMerging) {
                                     if (objTypes[objs[i].type].supportSurfaceMerging) {
                                         surfaceMerging_objs[surfaceMerging_objs.length] = objs[i];
@@ -2687,29 +2477,29 @@ function shootWaitingRays() {
                         canvasPainter.draw(waitingRays[j], 'rgb(255,255,128)');
                     }
                     if (mode == 'extended_light' && !waitingRays[j].isNew) {
-                        canvasPainter.draw(graphs.ray(waitingRays[j].p1, graphs.point(waitingRays[j].p1.x * 2 - waitingRays[j].p2.x, waitingRays[j].p1.y * 2 - waitingRays[j].p2.y)), 'rgb(255,128,0)');
+                        canvasPainter.draw(Graph.ray(waitingRays[j].p1, Graph.point(waitingRays[j].p1.x * 2 - waitingRays[j].p2.x, waitingRays[j].p1.y * 2 - waitingRays[j].p2.y)), 'rgb(255,128,0)');
                     }
                     if (mode == 'observer') {
-                        observed_point = graphs.intersection_line_circle(waitingRays[j], observer)[2];
+                        observed_point = Graph.intersection_line_circle(waitingRays[j], observer)[2];
                         if (observed_point) {
-                            if (graphs.intersection_is_on_ray(observed_point, waitingRays[j])) {
+                            if (Graph.intersection_is_on_ray(observed_point, waitingRays[j])) {
                                 observed = true;
                             }
                         }
                     }
                 } else {
                     if (mode == 'light' || mode == 'extended_light') {
-                        canvasPainter.draw(graphs.segment(waitingRays[j].p1, s_point), 'rgb(255,255,128)');
+                        canvasPainter.draw(Graph.segment(waitingRays[j].p1, s_point), 'rgb(255,255,128)');
                     }
                     if (mode == 'extended_light' && !waitingRays[j].isNew) {
-                        canvasPainter.draw(graphs.ray(waitingRays[j].p1, graphs.point(waitingRays[j].p1.x * 2 - waitingRays[j].p2.x, waitingRays[j].p1.y * 2 - waitingRays[j].p2.y)), 'rgb(255,128,0)');
-                        canvasPainter.draw(graphs.ray(s_point, graphs.point(s_point.x * 2 - waitingRays[j].p1.x, s_point.y * 2 - waitingRays[j].p1.y)), 'rgb(80,80,80)');
+                        canvasPainter.draw(Graph.ray(waitingRays[j].p1, Graph.point(waitingRays[j].p1.x * 2 - waitingRays[j].p2.x, waitingRays[j].p1.y * 2 - waitingRays[j].p2.y)), 'rgb(255,128,0)');
+                        canvasPainter.draw(Graph.ray(s_point, Graph.point(s_point.x * 2 - waitingRays[j].p1.x, s_point.y * 2 - waitingRays[j].p1.y)), 'rgb(80,80,80)');
                     }
                     if (mode == 'observer') {
-                        observed_point = graphs.intersection_line_circle(waitingRays[j], observer)[2];
+                        observed_point = Graph.intersection_line_circle(waitingRays[j], observer)[2];
 
                         if (observed_point) {
-                            if (graphs.intersection_is_on_segment(observed_point, graphs.segment(waitingRays[j].p1, s_point))) {
+                            if (Graph.intersection_is_on_segment(observed_point, Graph.segment(waitingRays[j].p1, s_point))) {
                                 observed = true;
                             }
                         }
@@ -2717,11 +2507,11 @@ function shootWaitingRays() {
                 }
                 if (mode == 'observer' && last_ray) {
                     if (!waitingRays[j].gap) {
-                        observed_intersection = graphs.intersection_2line(waitingRays[j], last_ray);
+                        observed_intersection = Graph.intersection_2line(waitingRays[j], last_ray);
 
                         if (observed) {
-                            if (last_intersection && graphs.length_squared(last_intersection, observed_intersection) < 25) {
-                                if (graphs.intersection_is_on_ray(observed_intersection, graphs.ray(observed_point, waitingRays[j].p1)) && graphs.length_squared(observed_point, waitingRays[j].p1) > 1e-5) {
+                            if (last_intersection && Graph.length_squared(last_intersection, observed_intersection) < 25) {
+                                if (Graph.intersection_is_on_ray(observed_intersection, Graph.ray(observed_point, waitingRays[j].p1)) && Graph.length_squared(observed_point, waitingRays[j].p1) > 1e-5) {
                                     ctx.globalAlpha = alpha0 * (waitingRays[j].brightness + last_ray.brightness) * 0.5;
                                     if (s_point) {
                                         rpd = (observed_intersection.x - waitingRays[j].p1.x) * (s_point.x - waitingRays[j].p1.x) + (observed_intersection.y - waitingRays[j].p1.y) * (s_point.y - waitingRays[j].p1.y);
@@ -2733,13 +2523,13 @@ function shootWaitingRays() {
                                     } else if (rpd < s_lensq) {
                                         canvasPainter.draw(observed_intersection, 'rgb(255,255,128)');
                                     }
-                                    canvasPainter.draw(graphs.segment(observed_point, observed_intersection), 'rgb(0,0,255)');
+                                    canvasPainter.draw(Graph.segment(observed_point, observed_intersection), 'rgb(0,0,255)');
                                 } else {
-                                    canvasPainter.draw(graphs.ray(observed_point, waitingRays[j].p1), 'rgb(0,0,255)');
+                                    canvasPainter.draw(Graph.ray(observed_point, waitingRays[j].p1), 'rgb(0,0,255)');
                                 }
                             } else {
                                 if (last_intersection) {
-                                    canvasPainter.draw(graphs.ray(observed_point, waitingRays[j].p1), 'rgb(0,0,255)');
+                                    canvasPainter.draw(Graph.ray(observed_point, waitingRays[j].p1), 'rgb(0,0,255)');
                                 }
                             }
                         }
@@ -2750,8 +2540,8 @@ function shootWaitingRays() {
                 }
                 if (mode == 'images' && last_ray) {
                     if (!waitingRays[j].gap) {
-                        observed_intersection = graphs.intersection_2line(waitingRays[j], last_ray);
-                        if (last_intersection && graphs.length_squared(last_intersection, observed_intersection) < 25) {
+                        observed_intersection = Graph.intersection_2line(waitingRays[j], last_ray);
+                        if (last_intersection && Graph.length_squared(last_intersection, observed_intersection) < 25) {
                             ctx.globalAlpha = alpha0 * (waitingRays[j].brightness + last_ray.brightness) * 0.5;
 
                             if (s_point) {
@@ -2816,17 +2606,17 @@ function shootWaitingRays() {
 }
 
 function mouseOnPoint(mouse, point) {
-    return graphs.length_squared(mouse, point) < clickExtent_point * clickExtent_point;
+    return Graph.length_squared(mouse, point) < clickExtent_point * clickExtent_point;
 }
 
 function mouseOnPoint_construct(mouse, point) {
-    return graphs.length_squared(mouse, point) < clickExtent_point_construct * clickExtent_point_construct;
+    return Graph.length_squared(mouse, point) < clickExtent_point_construct * clickExtent_point_construct;
 }
 
 function mouseOnSegment(mouse, segment) {
     var d_per = Math.pow((mouse.x - segment.p1.x) * (segment.p1.y - segment.p2.y) + (mouse.y - segment.p1.y) * (segment.p2.x - segment.p1.x), 2) / ((segment.p1.y - segment.p2.y) * (segment.p1.y - segment.p2.y) + (segment.p2.x - segment.p1.x) * (segment.p2.x - segment.p1.x));
     var d_par = (segment.p2.x - segment.p1.x) * (mouse.x - segment.p1.x) + (segment.p2.y - segment.p1.y) * (mouse.y - segment.p1.y);
-    return d_per < clickExtent_line * clickExtent_line && d_par >= 0 && d_par <= graphs.length_segment_squared(segment);
+    return d_per < clickExtent_line * clickExtent_line && d_par >= 0 && d_par <= Graph.length_segment_squared(segment);
 }
 
 function mouseOnLine(mouse, line) {
@@ -2840,7 +2630,7 @@ function snapToDirection(mouse, basePoint, directions, snapData) {
 
     if (snapData && snapData.locked) {
         var k = (directions[snapData.i0].x * x + directions[snapData.i0].y * y) / (directions[snapData.i0].x * directions[snapData.i0].x + directions[snapData.i0].y * directions[snapData.i0].y);
-        return graphs.point(basePoint.x + k * directions[snapData.i0].x, basePoint.y + k * directions[snapData.i0].y);
+        return Graph.point(basePoint.x + k * directions[snapData.i0].x, basePoint.y + k * directions[snapData.i0].y);
     } else {
         var i0;
         var d_sq;
@@ -2859,7 +2649,7 @@ function snapToDirection(mouse, basePoint, directions, snapData) {
         }
 
         var k = (directions[i0].x * x + directions[i0].y * y) / (directions[i0].x * directions[i0].x + directions[i0].y * directions[i0].y);
-        return graphs.point(basePoint.x + k * directions[i0].x, basePoint.y + k * directions[i0].y);
+        return Graph.point(basePoint.x + k * directions[i0].x, basePoint.y + k * directions[i0].y);
     }
 }
 
@@ -2869,7 +2659,7 @@ function canvas_onmousedown(e) {
     } else {
         var et = e;
     }
-    var mouse_nogrid = graphs.point((et.pageX - e.target.offsetLeft - origin.x) / scale, (et.pageY - e.target.offsetTop - origin.y) / scale);
+    var mouse_nogrid = Graph.point((et.pageX - e.target.offsetLeft - origin.x) / scale, (et.pageY - e.target.offsetTop - origin.y) / scale);
     mouse_lastmousedown = mouse_nogrid;
     if (positioningObj != -1) {
         confirmPositioning(e.ctrlKey, e.shiftKey);
@@ -2883,7 +2673,7 @@ function canvas_onmousedown(e) {
     }
 
     if (document.getElementById('grid').checked) {
-        mouse = graphs.point(Math.round(((et.pageX - e.target.offsetLeft - origin.x) / scale) / gridSize) * gridSize, Math.round(((et.pageY - e.target.offsetTop - origin.y) / scale) / gridSize) * gridSize);
+        mouse = Graph.point(Math.round(((et.pageX - e.target.offsetLeft - origin.x) / scale) / gridSize) * gridSize, Math.round(((et.pageY - e.target.offsetTop - origin.y) / scale) / gridSize) * gridSize);
     } else {
         mouse = mouse_nogrid;
     }
@@ -2897,7 +2687,7 @@ function canvas_onmousedown(e) {
             draggingPart = {};
 
             if (mode == 'observer') {
-                if (graphs.length_squared(mouse_nogrid, observer.c) < observer.r * observer.r) {
+                if (Graph.length_squared(mouse_nogrid, observer.c) < observer.r * observer.r) {
                     draggingObj = -4;
                     draggingPart = {};
                     draggingPart.mouse0 = mouse;
@@ -2919,7 +2709,7 @@ function canvas_onmousedown(e) {
                     if (objTypes[objs[i].type].clicked(objs[i], mouse_nogrid, mouse, draggingPart_)) {
                         if (draggingPart_.targetPoint) {
                             targetIsPoint = true;
-                            click_lensq_temp = graphs.length_squared(mouse_nogrid, draggingPart_.targetPoint);
+                            click_lensq_temp = Graph.length_squared(mouse_nogrid, draggingPart_.targetPoint);
                             if (click_lensq_temp <= click_lensq) {
                                 targetObj_index = i;
                                 click_lensq = click_lensq_temp;
@@ -2973,11 +2763,11 @@ function canvas_onmousemove(e) {
     } else {
         var et = e;
     }
-    var mouse_nogrid = graphs.point((et.pageX - e.target.offsetLeft - origin.x) / scale, (et.pageY - e.target.offsetTop - origin.y) / scale);
+    var mouse_nogrid = Graph.point((et.pageX - e.target.offsetLeft - origin.x) / scale, (et.pageY - e.target.offsetTop - origin.y) / scale);
     var mouse2;
 
     if (document.getElementById('grid').checked && !(e.altKey && !isConstructing)) {
-        mouse2 = graphs.point(Math.round(((et.pageX - e.target.offsetLeft - origin.x) / scale) / gridSize) * gridSize, Math.round(((et.pageY - e.target.offsetTop - origin.y) / scale) / gridSize) * gridSize);
+        mouse2 = Graph.point(Math.round(((et.pageX - e.target.offsetLeft - origin.x) / scale) / gridSize) * gridSize, Math.round(((et.pageY - e.target.offsetTop - origin.y) / scale) / gridSize) * gridSize);
     } else {
         mouse2 = mouse_nogrid;
     }
@@ -3072,15 +2862,15 @@ function canvas_onmouseup(e) {
 }
 
 function canvas_ondblclick(e) {
-    var mouse = graphs.point((e.pageX - e.target.offsetLeft - origin.x) / scale, (e.pageY - e.target.offsetTop - origin.y) / scale);
+    var mouse = Graph.point((e.pageX - e.target.offsetLeft - origin.x) / scale, (e.pageY - e.target.offsetTop - origin.y) / scale);
     if (isConstructing) {
     } else if (mouseOnPoint(mouse, mouse_lastmousedown)) {
         draggingPart = {};
         if (mode == 'observer') {
-            if (graphs.length_squared(mouse, observer.c) < observer.r * observer.r) {
+            if (Graph.length_squared(mouse, observer.c) < observer.r * observer.r) {
                 positioningObj = -4;
                 draggingPart = {};
-                draggingPart.targetPoint = graphs.point(observer.c.x, observer.c.y);
+                draggingPart.targetPoint = Graph.point(observer.c.x, observer.c.y);
                 draggingPart.snapData = {};
 
                 document.getElementById('xybox').style.left = (draggingPart.targetPoint.x * scale + origin.x) + 'px';
@@ -3106,7 +2896,7 @@ function canvas_ondblclick(e) {
                 draggingPart_ = {};
                 if (objTypes[objs[i].type].clicked(objs[i], mouse, mouse, draggingPart_)) {
                     if (draggingPart_.targetPoint) {
-                        click_lensq_temp = graphs.length_squared(mouse, draggingPart_.targetPoint);
+                        click_lensq_temp = Graph.length_squared(mouse, draggingPart_.targetPoint);
                         if (click_lensq_temp <= click_lensq) {
                             targetObj_index = i;
                             click_lensq = click_lensq_temp;
@@ -3201,7 +2991,7 @@ function confirmPositioning(ctrl, shift) {
             observer.c.x = xyData[0];
             observer.c.y = xyData[1];
         } else {
-            objTypes[objs[positioningObj].type].dragging(objs[positioningObj], graphs.point(xyData[0], xyData[1]), draggingPart, ctrl, shift);
+            objTypes[objs[positioningObj].type].dragging(objs[positioningObj], Graph.point(xyData[0], xyData[1]), draggingPart, ctrl, shift);
         }
         draw();
         createUndoPoint();
@@ -3459,7 +3249,7 @@ function toolbtnwithlist_mouseleft(tool, e) {
 
 function toollist_mouseleft(tool, e) {
     var rect = document.getElementById('tool_' + tool).getBoundingClientRect();
-    mouse = graphs.point(e.pageX, e.pageY);
+    mouse = Graph.point(e.pageX, e.pageY);
     if (mouse.x < rect.left || mouse.x > rect.right || mouse.y < rect.top || mouse.y > rect.bottom + 5) {
         document.getElementById('tool_' + tool + 'list').style.display = 'none';
         if (document.getElementById('tool_' + tool).className == 'toolbtnwithlisthover') {
@@ -3521,7 +3311,7 @@ function modebtn_clicked(mode1) {
         window.toolBarViewModel.rayDensity.value(Math.log(rayDensity_light));
     }
     if (mode == 'observer' && !observer) {
-        observer = graphs.circle(graphs.point((canvas.width * 0.5 - origin.x) / scale, (canvas.height * 0.5 - origin.y) / scale), 20);
+        observer = Graph.circle(Graph.point((canvas.width * 0.5 - origin.x) / scale, (canvas.height * 0.5 - origin.y) / scale), 20);
     }
 
     draw();
