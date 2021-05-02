@@ -1,14 +1,9 @@
 ﻿<!DOCTYPE html>
-<html manifest="manifest.appcache">
+<html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-  <meta property="og:title" content="Ray Optics Simulation">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://ricktu288.github.io/ray-optics/">
-  <meta property="og:image" content="https://ricktu288.github.io/ray-optics/image.png">
-  <meta property="og:description" content="An open-source web app to simulate reflection and refraction of light.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="white">
@@ -344,14 +339,6 @@ textarea {
 <!--===============座標輸入方塊==================-->
 <input type="text" id="xybox" style="background-color:rgba(0,0,0,0.5); color:white; position:absolute; border:none; display:none;" value="">
 
-<div style="position:absolute; right:0; bottom: 0; color:rgba(255,255,255,0.25); font-size:9pt;">
-  <span id="footer_message">Developed by ricktu288, j3soon</span>
-  |
-  <a href="https://ricktu288.github.io/ray-optics/" target="_blank" style="color:rgba(255,255,255,0.25)" id="homepage">Home</a>
-  |
-  <a href="https://github.com/ricktu288/ray-optics" target="_blank" style="color:rgba(255,255,255,0.25)" id="source">Source</a>
-</div>
-
 <!--Import scripts-->
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
@@ -359,6 +346,11 @@ textarea {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
 
 <script src="index.js"></script>
+<script src="i18n.js"></script>
+<script src="core.js"></script>
+<script src="json-io.js"></script>
+<script src="graphs.js"></script>
+<script src="elements.js"></script>
 <script src="FileSaver.js"></script>
 <script src="locales/en.js"></script>
 <script src="locales/zh_CN.js"></script>
@@ -368,16 +360,6 @@ textarea {
 <script src="ToolBarGroup.js"></script>
 <script src="ToolBarViewModel.js"></script>
 <script src="script.js"></script>
-
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-82058200-1', 'auto');
-  ga('send', 'pageview');
-</script>
 
 </body>
 </html>
