@@ -3652,130 +3652,111 @@ function open(readFile) {
     };
 }
 
-var lang = 'en';
-
-function getMsg(msg) {
-    return locales[lang][msg].message;
-}
-
 function init_i18n() {
-    if (navigator.language) {
-        var browser_lang = navigator.language;
-        if (browser_lang.toLowerCase() == 'zh-tw') {
-            lang = 'zh-TW';
-        }
-        if (browser_lang.toLowerCase() == 'zh-cn') {
-            lang = 'zh-CN';
-        }
-    }
-
-    var url_lang = location.search.substr(1)
-    if (url_lang && locales[url_lang]) {
-        lang = url_lang;
-    }
+    i18nInit();
 
     var downarraw = '\u25BC';
-    document.title = getMsg('appName');
+    document.title = i18nTranslate('appName');
 
     // Toolbar
-    document.getElementById('toolbar_title').innerHTML = getMsg('toolbar_title');
+    document.getElementById('toolbar_title').innerHTML = i18nTranslate('toolbar_title');
 
     //Ray
-    document.getElementById('tool_laser').value = getMsg('toolname_laser');
-    document.getElementById('tool_laser').dataset['n'] = getMsg('toolname_laser');
+    document.getElementById('tool_laser').value = i18nTranslate('toolname_laser');
+    document.getElementById('tool_laser').dataset['n'] = i18nTranslate('toolname_laser');
 
     //Point source
-    document.getElementById('tool_radiant').value = getMsg('toolname_radiant');
-    document.getElementById('tool_radiant').dataset['n'] = getMsg('toolname_radiant');
-    document.getElementById('tool_radiant').dataset['p'] = getMsg('brightness');
+    document.getElementById('tool_radiant').value = i18nTranslate('toolname_radiant');
+    document.getElementById('tool_radiant').dataset['n'] = i18nTranslate('toolname_radiant');
+    document.getElementById('tool_radiant').dataset['p'] = i18nTranslate('brightness');
 
     //Beam
-    document.getElementById('tool_parallel').value = getMsg('toolname_parallel');
-    document.getElementById('tool_parallel').dataset['n'] = getMsg('toolname_parallel');
-    document.getElementById('tool_parallel').dataset['p'] = getMsg('brightness');
+    document.getElementById('tool_parallel').value = i18nTranslate('toolname_parallel');
+    document.getElementById('tool_parallel').dataset['n'] = i18nTranslate('toolname_parallel');
+    document.getElementById('tool_parallel').dataset['p'] = i18nTranslate('brightness');
 
     //Mirror▼
-    document.getElementById('tool_mirror_').value = getMsg('toolname_mirror_') + downarraw;
+    document.getElementById('tool_mirror_').value = i18nTranslate('toolname_mirror_') + downarraw;
 
     //Mirror->Line
-    document.getElementById('tool_mirror').value = getMsg('tooltitle_mirror');
-    document.getElementById('tool_mirror').dataset['n'] = getMsg('toolname_mirror_');
+    document.getElementById('tool_mirror').value = i18nTranslate('tooltitle_mirror');
+    document.getElementById('tool_mirror').dataset['n'] = i18nTranslate('toolname_mirror_');
 
     //Mirror->Circular Arc
-    document.getElementById('tool_arcmirror').value = getMsg('tooltitle_arcmirror');
-    document.getElementById('tool_arcmirror').dataset['n'] = getMsg('toolname_mirror_');
+    document.getElementById('tool_arcmirror').value = i18nTranslate('tooltitle_arcmirror');
+    document.getElementById('tool_arcmirror').dataset['n'] = i18nTranslate('toolname_mirror_');
 
     //Mirror->Curve (ideal)
-    document.getElementById('tool_idealmirror').value = getMsg('tooltitle_idealmirror');
-    document.getElementById('tool_idealmirror').dataset['n'] = getMsg('toolname_idealmirror');
-    document.getElementById('tool_idealmirror').dataset['p'] = getMsg('focallength');
+    document.getElementById('tool_idealmirror').value = i18nTranslate('tooltitle_idealmirror');
+    document.getElementById('tool_idealmirror').dataset['n'] = i18nTranslate('toolname_idealmirror');
+    document.getElementById('tool_idealmirror').dataset['p'] = i18nTranslate('focallength');
 
     //Refractor▼
-    document.getElementById('tool_refractor_').value = getMsg('toolname_refractor_') + downarraw;
+    document.getElementById('tool_refractor_').value = i18nTranslate('toolname_refractor_') + downarraw;
 
     //Refractor->Half-plane
-    document.getElementById('tool_halfplane').value = getMsg('tooltitle_halfplane');
-    document.getElementById('tool_halfplane').dataset['n'] = getMsg('toolname_refractor_');
-    document.getElementById('tool_halfplane').dataset['p'] = getMsg('refractiveindex');
+    document.getElementById('tool_halfplane').value = i18nTranslate('tooltitle_halfplane');
+    document.getElementById('tool_halfplane').dataset['n'] = i18nTranslate('toolname_refractor_');
+    document.getElementById('tool_halfplane').dataset['p'] = i18nTranslate('refractiveindex');
 
     //Refractor->Circle
-    document.getElementById('tool_circlelens').value = getMsg('tooltitle_circlelens');
-    document.getElementById('tool_circlelens').dataset['n'] = getMsg('toolname_refractor_');
-    document.getElementById('tool_circlelens').dataset['p'] = getMsg('refractiveindex');
+    document.getElementById('tool_circlelens').value = i18nTranslate('tooltitle_circlelens');
+    document.getElementById('tool_circlelens').dataset['n'] = i18nTranslate('toolname_refractor_');
+    document.getElementById('tool_circlelens').dataset['p'] = i18nTranslate('refractiveindex');
 
     //Refractor->Other shape
-    document.getElementById('tool_refractor').value = getMsg('tooltitle_refractor');
-    document.getElementById('tool_refractor').dataset['n'] = getMsg('toolname_refractor_');
-    document.getElementById('tool_refractor').dataset['p'] = getMsg('refractiveindex');
+    document.getElementById('tool_refractor').value = i18nTranslate('tooltitle_refractor');
+    document.getElementById('tool_refractor').dataset['n'] = i18nTranslate('toolname_refractor_');
+    document.getElementById('tool_refractor').dataset['p'] = i18nTranslate('refractiveindex');
 
     //Refractor->Lens (ideal)
-    document.getElementById('tool_lens').value = getMsg('tooltitle_lens');
-    document.getElementById('tool_lens').dataset['n'] = getMsg('toolname_lens');
-    document.getElementById('tool_lens').dataset['p'] = getMsg('focallength');
+    document.getElementById('tool_lens').value = i18nTranslate('tooltitle_lens');
+    document.getElementById('tool_lens').dataset['n'] = i18nTranslate('toolname_lens');
+    document.getElementById('tool_lens').dataset['p'] = i18nTranslate('focallength');
 
     //Blocker
-    document.getElementById('tool_blackline').value = getMsg('toolname_blackline');
-    document.getElementById('tool_blackline').dataset['n'] = getMsg('toolname_blackline');
+    document.getElementById('tool_blackline').value = i18nTranslate('toolname_blackline');
+    document.getElementById('tool_blackline').dataset['n'] = i18nTranslate('toolname_blackline');
 
     //Ruler
-    document.getElementById('tool_ruler').value = getMsg('toolname_ruler');
-    document.getElementById('tool_ruler').dataset['n'] = getMsg('toolname_ruler');
+    document.getElementById('tool_ruler').value = i18nTranslate('toolname_ruler');
+    document.getElementById('tool_ruler').dataset['n'] = i18nTranslate('toolname_ruler');
 
     //Protractor
-    document.getElementById('tool_protractor').value = getMsg('toolname_protractor');
-    document.getElementById('tool_protractor').dataset['n'] = getMsg('toolname_protractor');
+    document.getElementById('tool_protractor').value = i18nTranslate('toolname_protractor');
+    document.getElementById('tool_protractor').dataset['n'] = i18nTranslate('toolname_protractor');
 
     //Move view
-    document.getElementById('tool_').value = getMsg('toolname_');
+    document.getElementById('tool_').value = i18nTranslate('toolname_');
 
     // Mode bar
-    document.getElementById('modebar_title').innerHTML = getMsg('modebar_title');
-    document.getElementById('mode_light').value = getMsg('modename_light');
-    document.getElementById('mode_extended_light').value = getMsg('modename_extended_light');
-    document.getElementById('mode_images').value = getMsg('modename_images');
-    document.getElementById('mode_observer').value = getMsg('modename_observer');
-    document.getElementById('rayDensity_title').innerHTML = getMsg('raydensity');
+    document.getElementById('modebar_title').innerHTML = i18nTranslate('modebar_title');
+    document.getElementById('mode_light').value = i18nTranslate('modename_light');
+    document.getElementById('mode_extended_light').value = i18nTranslate('modename_extended_light');
+    document.getElementById('mode_images').value = i18nTranslate('modename_images');
+    document.getElementById('mode_observer').value = i18nTranslate('modename_observer');
+    document.getElementById('rayDensity_title').innerHTML = i18nTranslate('raydensity');
 
-    document.getElementById('undo').value = getMsg('undo');
-    document.getElementById('redo').value = getMsg('redo');
-    document.getElementById('reset').value = getMsg('reset');
-    document.getElementById('save').value = getMsg('save');
-    document.getElementById('save_name_title').innerHTML = getMsg('save_name');
-    document.getElementById('save_confirm').value = getMsg('save');
-    document.getElementById('save_cancel').value = getMsg('save_cancel');
-    document.getElementById('save_description').innerHTML = getMsg('save_description');
-    document.getElementById('open').value = getMsg('open');
-    document.getElementById('lockobjs_title').innerHTML = getMsg('lockobjs');
-    document.getElementById('grid_title').innerHTML = getMsg('snaptogrid');
-    document.getElementById('showgrid_title').innerHTML = getMsg('grid');
+    document.getElementById('undo').value = i18nTranslate('undo');
+    document.getElementById('redo').value = i18nTranslate('redo');
+    document.getElementById('reset').value = i18nTranslate('reset');
+    document.getElementById('save').value = i18nTranslate('save');
+    document.getElementById('save_name_title').innerHTML = i18nTranslate('save_name');
+    document.getElementById('save_confirm').value = i18nTranslate('save');
+    document.getElementById('save_cancel').value = i18nTranslate('save_cancel');
+    document.getElementById('save_description').innerHTML = i18nTranslate('save_description');
+    document.getElementById('open').value = i18nTranslate('open');
+    document.getElementById('lockobjs_title').innerHTML = i18nTranslate('lockobjs');
+    document.getElementById('grid_title').innerHTML = i18nTranslate('snaptogrid');
+    document.getElementById('showgrid_title').innerHTML = i18nTranslate('grid');
 
-    document.getElementById('setAttrAll_title').innerHTML = getMsg('applytoall');
-    document.getElementById('copy').value = getMsg('duplicate');
-    document.getElementById('delete').value = getMsg('delete');
+    document.getElementById('setAttrAll_title').innerHTML = i18nTranslate('applytoall');
+    document.getElementById('copy').value = i18nTranslate('duplicate');
+    document.getElementById('delete').value = i18nTranslate('delete');
 
-    document.getElementById('forceStop').innerHTML = getMsg('processing');
+    document.getElementById('forceStop').innerHTML = i18nTranslate('processing');
 
-    document.getElementById('footer_message').innerHTML = getMsg('footer_message');
-    document.getElementById('homepage').innerHTML = getMsg('homepage');
-    document.getElementById('source').innerHTML = getMsg('source');
+    document.getElementById('footer_message').innerHTML = i18nTranslate('footer_message');
+    document.getElementById('homepage').innerHTML = i18nTranslate('homepage');
+    document.getElementById('source').innerHTML = i18nTranslate('source');
 }

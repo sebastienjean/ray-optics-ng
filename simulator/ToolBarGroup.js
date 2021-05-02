@@ -36,7 +36,7 @@ class ToolBarItem {
     else if (this.name == "Glasses")
       this.description = 3;
     else
-      this.description = getMsg(this.id + "_popover");
+      this.description = i18nTranslate(this.id + "_popover");
 
     this.type = type;
     this.selected = "";
@@ -65,7 +65,7 @@ class ToolBarItem {
     return "<b>" + this.getLocaleName() + "</b>";
   }
   getLocaleName() {
-    return getMsg(this.id);
+    return i18nTranslate(this.id);
   }
   getContent() {
     var image = "";
@@ -91,6 +91,6 @@ class ToolBarGroup {
     }
   }
   getLocaleName() {
-    return getMsg(this.title);
+    return i18nTranslate(this.title);
   }
 }
