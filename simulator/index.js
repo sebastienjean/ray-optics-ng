@@ -2163,7 +2163,7 @@ window.onload = function (e) {
     }
 
     if (document.getElementById('textarea1').value != '') {
-        JSONInput();
+        jsonImportFromHiddenField();
         toolbtn_clicked('');
     } else {
         initParameters();
@@ -2307,7 +2307,7 @@ window.onload = function (e) {
     cancelMousedownEvent('open');
 
     document.getElementById('openfile').onchange = function () {
-        open(this.files[0]);
+        jsonLoadFromFile(this.files[0]);
     };
 
     modes.forEach(function (element, index) {
@@ -2444,7 +2444,7 @@ window.onload = function (e) {
     cancelMousedownEvent('delete');
 
     document.getElementById('textarea1').onchange = function () {
-        JSONInput();
+        jsonImportFromHiddenField();
         createUndoPoint();
     };
 
@@ -2466,7 +2466,7 @@ window.onload = function (e) {
         document.getElementById('saveBox').style.display = 'none';
     };
 
-    document.getElementById('save_confirm').onclick = save;
+    document.getElementById('save_confirm').onclick = jsonSaveToFile;
     cancelMousedownEvent('saveBox');
 
     document.getElementById('xybox').onkeydown = function (e) {
@@ -2512,12 +2512,12 @@ window.onload = function (e) {
         var dt = e.dataTransfer;
         if (dt.files[0]) {
             var files = dt.files;
-            open(files[0]);
+            jsonLoadFromFile(files[0]);
         } else {
             var fileString = dt.getData('text');
             document.getElementById('textarea1').value = fileString;
             selectedObj = -1;
-            JSONInput();
+            jsonImportFromHiddenField();
             createUndoPoint();
         }
     };
@@ -2551,7 +2551,7 @@ function draw_() {
     }
     stateOutdated = false;
 
-    JSONOutput();
+    jsonExportToUIHiddenField();
     canvasPainter.cls();
     ctx.globalAlpha = 1;
     hasExceededTime = false;
@@ -3255,7 +3255,7 @@ function undo() {
 
     undoIndex = (undoIndex + (undoLimit - 1)) % undoLimit;
     document.getElementById('textarea1').value = undoArr[undoIndex];
-    JSONInput();
+    jsonImportFromHiddenField();
     document.getElementById('redo').disabled = false;
     if (undoIndex == undoLBound) {
         document.getElementById('undo').disabled = true;
@@ -3270,7 +3270,7 @@ function redo() {
 
     undoIndex = (undoIndex + 1) % undoLimit;
     document.getElementById('textarea1').value = undoArr[undoIndex];
-    JSONInput();
+    jsonImportFromHiddenField();
     document.getElementById('undo').disabled = false;
     if (undoIndex == undoUBound) {
         document.getElementById('redo').disabled = true;
@@ -3407,75 +3407,6 @@ window.onkeyup = function (e) {
         createUndoPoint();
     }
 };
-
-function JSONOutput() {
-    document.getElementById('textarea1').value = JSON.stringify({
-        version: 2,
-        objs: objs,
-        mode: mode,
-        rayDensity_light: rayDensity_light,
-        rayDensity_images: rayDensity_images,
-        observer: observer,
-        origin: origin,
-        scale: scale
-    });
-    if (typeof (Storage) !== "undefined") {
-        localStorage.rayOpticsData = document.getElementById('textarea1').value;
-    }
-}
-
-function JSONInput() {
-    var jsonData = JSON.parse(document.getElementById('textarea1').value);
-    if (typeof jsonData != 'object') return;
-    if (!jsonData.version) {
-        var str1 = document.getElementById('textarea1').value.replace(/"point"|"xxa"|"aH"/g, '1').replace(/"circle"|"xxf"/g, '5').replace(/"k"/g, '"objs"').replace(/"L"/g, '"p1"').replace(/"G"/g, '"p2"').replace(/"F"/g, '"p3"').replace(/"bA"/g, '"exist"').replace(/"aa"/g, '"parallel"').replace(/"ba"/g, '"mirror"').replace(/"bv"/g, '"lens"').replace(/"av"/g, '"notDone"').replace(/"bP"/g, '"lightAlpha"').replace(/"ab"|"observed_light"|"observed_images"/g, '"observer"');
-        jsonData = JSON.parse(str1);
-        if (!jsonData.objs) {
-            jsonData = {objs: jsonData};
-        }
-        if (!jsonData.mode) {
-            jsonData.mode = 'light';
-        }
-        if (!jsonData.rayDensity_light) {
-            jsonData.rayDensity_light = 1;
-        }
-        if (!jsonData.rayDensity_images) {
-            jsonData.rayDensity_images = 1;
-        }
-        if (!jsonData.scale) {
-            jsonData.scale = 1;
-        }
-        jsonData.version = 1;
-    }
-    if (jsonData.version == 1) {
-        jsonData.origin = {x: 0, y: 0};
-    }
-    if (jsonData.version > 2) {
-        return;
-    }
-    //TODO: Create new version.
-    if (!jsonData.scale) {
-        jsonData.scale = 1;
-    }
-
-    objs = jsonData.objs;
-    rayDensity_light = jsonData.rayDensity_light;
-    rayDensity_images = jsonData.rayDensity_images;
-    observer = jsonData.observer;
-    origin = jsonData.origin;
-    scale = jsonData.scale;
-    modebtn_clicked(jsonData.mode);
-    selectObj(selectedObj);
-}
-
-function accessJSON() {
-    if (document.getElementById('textarea1').style.display == 'none') {
-        document.getElementById('textarea1').style.display = '';
-        document.getElementById('textarea1').select();
-    } else {
-        document.getElementById('textarea1').style.display = 'none';
-    }
-}
 
 function toolbtn_mouseentered(tool, e) {
     hideAllLists();
@@ -3627,29 +3558,6 @@ function setScaleWithCenter(value, centerX, centerY) {
     origin.y -= centerY * scaleChange;
     scale = value;
     draw();
-}
-
-function save() {
-    JSONOutput();
-
-    var blob = new Blob([document.getElementById('textarea1').value], {type: 'application/json'});
-    saveAs(blob, document.getElementById('save_name').value);
-
-    document.getElementById('saveBox').style.display = 'none';
-}
-
-function open(readFile) {
-    var reader = new FileReader();
-    document.getElementById('save_name').value = readFile.name;
-    reader.readAsText(readFile);
-    reader.onload = function (evt) {
-        var fileString = evt.target.result;
-        document.getElementById('textarea1').value = fileString;
-        endPositioning();
-        selectedObj = -1;
-        JSONInput();
-        createUndoPoint();
-    };
 }
 
 function init_i18n() {
