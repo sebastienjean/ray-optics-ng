@@ -1,7 +1,7 @@
 function jsonExportToUIHiddenField() {
     document.getElementById('textarea1').value = JSON.stringify({
         version: 2,
-        objs: objs,
+        objs: elements,
         mode: mode,
         rayDensity_light: rayDensity_light,
         rayDensity_images: rayDensity_images,
@@ -48,7 +48,7 @@ function jsonImportFromHiddenField() {
         jsonData.scale = 1;
     }
 
-    objs = jsonData.objs;
+    elements = jsonData.objs;
     rayDensity_light = jsonData.rayDensity_light;
     rayDensity_images = jsonData.rayDensity_images;
     observer = jsonData.observer;
