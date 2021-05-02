@@ -101,8 +101,4 @@
     document.getElementById('delete').value = i18nTranslate('delete');
 
     document.getElementById('forceStop').innerHTML = i18nTranslate('processing');
-
-    document.getElementById('footer_message').innerHTML = i18nTranslate('footer_message');
-    document.getElementById('homepage').innerHTML = i18nTranslate('homepage');
-    document.getElementById('source').innerHTML = i18nTranslate('source');
 }
