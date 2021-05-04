@@ -114,7 +114,8 @@ window.onload = function (e) {
     }
 
     if (document.getElementById('textarea1').value != '') {
-        jsonImportFromHiddenField();
+        jsonImport(document.getElementById('textarea1').value);
+        modebtn_clicked(mode);
         toolbtn_clicked('');
     } else {
         initParameters();
@@ -243,9 +244,6 @@ window.onload = function (e) {
     };
     cancelMousedownEvent('reset');
 
-    document.getElementById('accessJSON').onclick = accessJSON;
-    cancelMousedownEvent('accessJSON');
-
     document.getElementById('save').onclick = function () {
         document.getElementById('saveBox').style.display = '';
         document.getElementById('save_name').select();
@@ -258,7 +256,9 @@ window.onload = function (e) {
     cancelMousedownEvent('open');
 
     document.getElementById('openfile').onchange = function () {
-        jsonLoadFromFile(this.files[0]);
+        const fileName = this.files[0];
+        document.getElementById('save_name').value = fileName;
+        jsonLoadFromFile(fileName);
     };
 
     modes.forEach(function (element, index) {
@@ -395,7 +395,8 @@ window.onload = function (e) {
     cancelMousedownEvent('delete');
 
     document.getElementById('textarea1').onchange = function () {
-        jsonImportFromHiddenField();
+        jsonImport(document.getElementById('textarea1').value);
+        modebtn_clicked(mode);
         createUndoPoint();
     };
 
@@ -417,7 +418,11 @@ window.onload = function (e) {
         document.getElementById('saveBox').style.display = 'none';
     };
 
-    document.getElementById('save_confirm').onclick = jsonSaveToFile;
+    document.getElementById('save_confirm').onclick = function () {
+        document.getElementById('textarea1').value = jsonExport();
+        jsonSaveToFile(document.getElementById('textarea1').value, document.getElementById('save_name').value);
+        document.getElementById('saveBox').style.display = 'none';
+    };
     cancelMousedownEvent('saveBox');
 
     document.getElementById('xybox').onkeydown = function (e) {
@@ -464,11 +469,13 @@ window.onload = function (e) {
         if (dt.files[0]) {
             var files = dt.files;
             jsonLoadFromFile(files[0]);
+
         } else {
             var fileString = dt.getData('text');
             document.getElementById('textarea1').value = fileString;
             selectedObj = -1;
-            jsonImportFromHiddenField();
+            jsonImport(document.getElementById('textarea1').value);
+            modebtn_clicked(mode);
             createUndoPoint();
         }
     };
@@ -502,7 +509,7 @@ function draw_() {
     }
     stateOutdated = false;
 
-    jsonExportToUIHiddenField();
+    document.getElementById('textarea1').value = jsonExport();
     canvasPainter.cls();
     ctx.globalAlpha = 1;
     hasExceededTime = false;
@@ -1206,7 +1213,8 @@ function undo() {
 
     undoIndex = (undoIndex + (undoLimit - 1)) % undoLimit;
     document.getElementById('textarea1').value = undoArr[undoIndex];
-    jsonImportFromHiddenField();
+    jsonImport(document.getElementById('textarea1').value);
+    modebtn_clicked(mode);
     document.getElementById('redo').disabled = false;
     if (undoIndex == undoLBound) {
         document.getElementById('undo').disabled = true;
@@ -1221,7 +1229,8 @@ function redo() {
 
     undoIndex = (undoIndex + 1) % undoLimit;
     document.getElementById('textarea1').value = undoArr[undoIndex];
-    jsonImportFromHiddenField();
+    jsonImport(document.getElementById('textarea1').value);
+    modebtn_clicked(mode);
     document.getElementById('undo').disabled = false;
     if (undoIndex == undoUBound) {
         document.getElementById('redo').disabled = true;
